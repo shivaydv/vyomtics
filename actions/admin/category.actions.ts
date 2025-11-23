@@ -4,12 +4,44 @@ import { CategoryFormData, categorySchema } from "@/lib/zod-schema";
 import { prisma } from "@/prisma/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getSignedViewUrl } from "@/lib/cloud-storage";
 import { requireAdmin } from "@/lib/admin-auth";
 
 // Validation Schema
 
-// Get all categories
+// Helper: Get all descendant category IDs recursively
+async function getAllDescendantIds(categoryId: string): Promise<string[]> {
+  const children = await prisma.category.findMany({
+    where: { parentId: categoryId },
+    select: { id: true },
+  });
+
+  if (children.length === 0) return [];
+
+  const childIds = children.map((c) => c.id);
+  const grandchildIds = await Promise.all(childIds.map((id) => getAllDescendantIds(id)));
+
+  return [...childIds, ...grandchildIds.flat()];
+}
+
+// Helper: Get deletion impact (children count and total products)
+async function getCategoryDeletionImpact(categoryId: string) {
+  const descendantIds = await getAllDescendantIds(categoryId);
+  const allIds = [categoryId, ...descendantIds];
+
+  const [directProducts, affectedProducts] = await Promise.all([
+    prisma.product.count({ where: { categoryId } }),
+    prisma.product.count({ where: { categoryId: { in: allIds } } }),
+  ]);
+
+  return {
+    childrenCount: descendantIds.length,
+    directProducts,
+    totalAffectedProducts: affectedProducts,
+    descendantIds,
+  };
+}
+
+// Get all categories (with hierarchy support)
 export async function getCategories() {
   try {
     const categories = await prisma.category.findMany({
@@ -17,25 +49,21 @@ export async function getCategories() {
         _count: {
           select: { products: true },
         },
+        parent: true,
+        children: true,
       },
       orderBy: { order: "asc" },
     });
 
-    // Transform category images to signed URLs
-    const categoriesWithSignedUrls = await Promise.all(
-      categories.map(async (cat) => {
-        const signedImage = cat.image ? await getSignedViewUrl(cat.image) : cat.image;
-        return {
-          ...cat,
-          image: signedImage,
-          productCount: cat._count.products,
-        };
-      })
-    );
+    // Map categories with product count
+    const categoriesWithCount = categories.map((cat) => ({
+      ...cat,
+      productCount: cat._count.products,
+    }));
 
     return {
       success: true,
-      data: categoriesWithSignedUrls,
+      data: categoriesWithCount,
     };
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -52,6 +80,8 @@ export async function getCategory(id: string) {
         _count: {
           select: { products: true },
         },
+        parent: true,
+        children: true,
       },
     });
 
@@ -59,14 +89,10 @@ export async function getCategory(id: string) {
       return { success: false, error: "Category not found" };
     }
 
-    // Transform category image to signed URL
-    const signedImage = category.image ? await getSignedViewUrl(category.image) : category.image;
-
     return {
       success: true,
       data: {
         ...category,
-        image: signedImage,
         productCount: category._count.products,
       },
     };
@@ -92,14 +118,10 @@ export async function getCategoryBySlug(slug: string) {
       return { success: false, error: "Category not found" };
     }
 
-    // Transform category image to signed URL
-    const signedImage = category.image ? await getSignedViewUrl(category.image) : category.image;
-
     return {
       success: true,
       data: {
         ...category,
-        image: signedImage,
         productCount: category._count.products,
       },
     };
@@ -174,38 +196,91 @@ export async function updateCategory(id: string, data: CategoryFormData) {
   }
 }
 
-// Delete category
-export async function deleteCategory(id: string) {
+// Get deletion impact for a category
+export async function getCategoryDeletionInfo(id: string) {
   await requireAdmin();
 
   try {
-    // Check if category has products
     const category = await prisma.category.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: { products: true },
-        },
-      },
+      select: { id: true, name: true },
     });
 
     if (!category) {
       return { success: false, error: "Category not found" };
     }
 
-    if (category._count.products > 0) {
+    const impact = await getCategoryDeletionImpact(id);
+
+    return {
+      success: true,
+      data: {
+        ...impact,
+        categoryName: category.name,
+      },
+    };
+  } catch (error) {
+    console.error("Error getting deletion info:", error);
+    return { success: false, error: "Failed to get deletion info" };
+  }
+}
+
+// Delete category with cascade handling
+export async function deleteCategory(
+  id: string,
+  options?: { moveProductsToUncategorized?: boolean }
+) {
+  await requireAdmin();
+
+  try {
+    const category = await prisma.category.findUnique({
+      where: { id },
+      select: { id: true, name: true, parentId: true },
+    });
+
+    if (!category) {
+      return { success: false, error: "Category not found" };
+    }
+
+    // Get deletion impact
+    const impact = await getCategoryDeletionImpact(id);
+
+    // If has children or products, require explicit confirmation
+    if (
+      !options?.moveProductsToUncategorized &&
+      (impact.childrenCount > 0 || impact.totalAffectedProducts > 0)
+    ) {
       return {
         success: false,
-        error: `Cannot delete category with ${category._count.products} products. Please reassign or delete the products first.`,
+        requiresConfirmation: true,
+        impact: {
+          ...impact,
+          categoryName: category.name,
+        },
+        error: `This category has ${impact.childrenCount} subcategories and ${impact.totalAffectedProducts} products that will be affected.`,
       };
     }
 
+    // Delete with cascade (Prisma schema has onDelete: Cascade for children)
+    // Move products to uncategorized (set categoryId to null)
+    if (options?.moveProductsToUncategorized) {
+      const allIds = [id, ...impact.descendantIds];
+      await prisma.product.updateMany({
+        where: { categoryId: { in: allIds } },
+        data: { categoryId: null },
+      });
+    }
+
+    // Delete category (children will be cascade deleted by Prisma)
     await prisma.category.delete({
       where: { id },
     });
 
     revalidatePath("/admin/categories");
-    return { success: true, message: "Category deleted successfully" };
+    return {
+      success: true,
+      message: `Category "${category.name}" and ${impact.childrenCount} subcategories deleted. ${impact.totalAffectedProducts} products moved to uncategorized.`,
+    };
   } catch (error) {
     console.error("Error deleting category:", error);
     return { success: false, error: "Failed to delete category" };

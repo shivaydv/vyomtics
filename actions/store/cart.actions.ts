@@ -3,7 +3,6 @@
 import { prisma } from "@/prisma/db";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { transformProductsWithSignedUrls } from "@/lib/image-utils";
 import { auth } from "@/lib/auth";
 
 // Get or create cart ID for logged-in user only
@@ -72,13 +71,10 @@ export async function getCart() {
       },
     });
 
-    // Transform products with signed URLs
-    const productsWithSignedUrls = await transformProductsWithSignedUrls(products);
-
     // Map cart items with full product details
     const enrichedItems = cart.items
       .map((item) => {
-        const product = productsWithSignedUrls.find((p) => p.id === item.productId);
+        const product = products.find((p) => p.id === item.productId);
         if (!product) return null;
 
         // Find the specific variant

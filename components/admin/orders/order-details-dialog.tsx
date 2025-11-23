@@ -145,7 +145,13 @@ export function OrderDetailsDialog({ orderId, open, onOpenChange }: OrderDetails
                     >
                       {item.image && (
                         <div className="relative w-12 h-12 rounded overflow-hidden shrink-0">
-                          <Image src={item.image} alt={item.name} fill className="object-cover" />
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
                         </div>
                       )}
                       <div className="flex-1">

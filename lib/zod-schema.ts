@@ -1,30 +1,74 @@
 import { z } from "zod";
 
-// Product variant schema
-export const productVariantSchema = z.object({
-  weight: z.string().min(1, "Weight is required"),
-  price: z.number().positive("Price must be positive"),
-  compareAtPrice: z.number().optional().nullable(),
-  stockQuantity: z.number().int().min(0, "Stock cannot be negative"),
-  // inStock is auto-calculated from stockQuantity, not stored in schema
+// Product Section Schemas
+export const textBlockSchema = z.object({
+  type: z.literal("text"),
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
 });
 
-export type ProductVariant = z.infer<typeof productVariantSchema>;
+export const bulletListSchema = z.object({
+  type: z.literal("bullets"),
+  title: z.string().min(1, "Title is required"),
+  items: z
+    .array(z.string().min(1, "Item cannot be empty"))
+    .min(1, "At least one bullet point is required"),
+});
+
+export const keyValueSchema = z.object({
+  type: z.literal("specs"),
+  title: z.string().min(1, "Title is required"),
+  items: z
+    .array(
+      z.object({
+        key: z.string().min(1, "Key is required"),
+        value: z.string().min(1, "Value is required"),
+      })
+    )
+    .min(1, "At least one specification is required"),
+});
+
+export const productSectionSchema = z.discriminatedUnion("type", [
+  textBlockSchema,
+  bulletListSchema,
+  keyValueSchema,
+]);
+
+export const productFaqSchema = z.object({
+  question: z.string().min(1, "Question is required"),
+  answer: z.string().min(1, "Answer is required"),
+});
+
+export type ProductSection = z.infer<typeof productSectionSchema>;
+export type ProductFaq = z.infer<typeof productFaqSchema>;
 
 export type ProductFormData = z.infer<typeof productSchema>;
 
-export const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  slug: z.string().min(1, "Slug is required"),
-  description: z.string().min(1, "Description is required"),
-  images: z.array(z.string()).min(1, "At least one image is required"),
-  categoryId: z.string().min(1, "Category is required"),
-  variants: z.array(productVariantSchema).min(1, "At least one variant is required"),
-  isFeatured: z.boolean().default(false),
-  isBestSeller: z.boolean().default(false),
-  isOnSale: z.boolean().default(false),
-  tags: z.array(z.string()).default([]),
-});
+export const productSchema = z
+  .object({
+    title: z.string().min(1, "Title is required"),
+    slug: z.string().min(1, "Slug is required"),
+    shortDescription: z.string().optional(),
+    description: z.string().min(1, "Description is required"),
+    images: z.array(z.string()).default([]),
+    video: z.string().optional(),
+    categoryId: z.string().optional().nullable(),
+    mrp: z.number().positive("MRP must be positive"),
+    sellingPrice: z.number().positive("Selling price must be positive"),
+    stock: z.number().int().min(0, "Stock cannot be negative"),
+    isActive: z.boolean().default(true),
+    isFeatured: z.boolean().default(false),
+    isBestSeller: z.boolean().default(false),
+    isOnSale: z.boolean().default(false),
+    isNewArrival: z.boolean().default(false),
+    sections: z.array(productSectionSchema).default([]),
+    faqs: z.array(productFaqSchema).default([]),
+    tags: z.array(z.string()).default([]),
+  })
+  .refine((data) => data.sellingPrice <= data.mrp, {
+    message: "Selling price cannot be greater than MRP",
+    path: ["sellingPrice"],
+  });
 
 export type CategoryFormData = z.infer<typeof categorySchema>;
 
@@ -35,6 +79,7 @@ export const categorySchema = z.object({
   image: z.string().optional(),
   order: z.number().int().default(0),
   isActive: z.boolean().default(true),
+  parentId: z.string().optional().nullable(),
 });
 
 export type CMSPageFormData = z.infer<typeof cmsPageSchema>;

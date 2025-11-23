@@ -4,14 +4,13 @@ import { ProductFormData, productSchema } from "@/lib/zod-schema";
 import { prisma } from "@/prisma/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { transformProductsWithSignedUrls, transformProductWithSignedUrls } from "@/lib/image-utils";
 import { requireAdmin } from "@/lib/admin-auth";
 
 // Get all products with filtering (including ratings for admin)
 export async function getProducts(filters?: {
   categoryId?: string;
   search?: string;
-  inStock?: boolean;
+  isActive?: boolean;
   isFeatured?: boolean;
   isBestSeller?: boolean;
 }) {
@@ -24,13 +23,13 @@ export async function getProducts(filters?: {
 
     if (filters?.search) {
       where.OR = [
-        { name: { contains: filters.search, mode: "insensitive" } },
+        { title: { contains: filters.search, mode: "insensitive" } },
         { description: { contains: filters.search, mode: "insensitive" } },
       ];
     }
 
-    if (filters?.inStock !== undefined) {
-      where.inStock = filters.inStock;
+    if (filters?.isActive !== undefined) {
+      where.isActive = filters.isActive;
     }
 
     if (filters?.isFeatured !== undefined) {
@@ -49,10 +48,7 @@ export async function getProducts(filters?: {
       orderBy: { createdAt: "desc" },
     });
 
-    // Transform images to signed URLs
-    const productsWithSignedUrls = await transformProductsWithSignedUrls(products);
-
-    return { success: true, data: productsWithSignedUrls };
+    return { success: true, data: products };
   } catch (error) {
     console.error("Error fetching products:", error);
     return { success: false, error: "Failed to fetch products" };
@@ -73,10 +69,7 @@ export async function getProduct(id: string) {
       return { success: false, error: "Product not found" };
     }
 
-    // Transform images to signed URLs
-    const productWithSignedUrls = await transformProductWithSignedUrls(product);
-
-    return { success: true, data: productWithSignedUrls };
+    return { success: true, data: product };
   } catch (error) {
     console.error("Error fetching product:", error);
     return { success: false, error: "Failed to fetch product" };
@@ -97,10 +90,7 @@ export async function getProductBySlug(slug: string) {
       return { success: false, error: "Product not found" };
     }
 
-    // Transform images to signed URLs
-    const productWithSignedUrls = await transformProductWithSignedUrls(product);
-
-    return { success: true, data: productWithSignedUrls };
+    return { success: true, data: product };
   } catch (error) {
     console.error("Error fetching product:", error);
     return { success: false, error: "Failed to fetch product" };
@@ -124,25 +114,41 @@ export async function createProduct(data: ProductFormData) {
       return { success: false, error: "Product with this slug already exists" };
     }
 
-    // Verify category exists
-    const category = await prisma.category.findUnique({
-      where: { id: validatedData.categoryId },
-    });
+    // Verify category exists if provided
+    if (validatedData.categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: validatedData.categoryId },
+      });
 
-    if (!category) {
-      return { success: false, error: "Category not found" };
+      if (!category) {
+        return { success: false, error: "Category not found" };
+      }
     }
 
-    // Auto-calculate inStock for each variant based on stockQuantity
-    const variantsWithStock = validatedData.variants.map((variant) => ({
-      ...variant,
-      inStock: variant.stockQuantity > 0,
-    }));
+    // Use placeholder image if no images provided
+    const productImages =
+      validatedData.images.length > 0 ? validatedData.images : ["https://placehold.co/600x400"];
 
     const product = await prisma.product.create({
       data: {
-        ...validatedData,
-        variants: variantsWithStock,
+        title: validatedData.title,
+        slug: validatedData.slug,
+        shortDescription: validatedData.shortDescription,
+        description: validatedData.description,
+        images: productImages,
+        video: validatedData.video,
+        categoryId: validatedData.categoryId,
+        mrp: validatedData.mrp,
+        sellingPrice: validatedData.sellingPrice,
+        stock: validatedData.stock,
+        isActive: validatedData.isActive,
+        isFeatured: validatedData.isFeatured,
+        isBestSeller: validatedData.isBestSeller,
+        isOnSale: validatedData.isOnSale,
+        isNewArrival: validatedData.isNewArrival,
+        sections: validatedData.sections as any,
+        faqs: validatedData.faqs as any,
+        tags: validatedData.tags,
       },
       include: {
         category: true,
@@ -181,26 +187,42 @@ export async function updateProduct(id: string, data: ProductFormData) {
       return { success: false, error: "Product with this slug already exists" };
     }
 
-    // Verify category exists
-    const category = await prisma.category.findUnique({
-      where: { id: validatedData.categoryId },
-    });
+    // Verify category exists if provided
+    if (validatedData.categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: validatedData.categoryId },
+      });
 
-    if (!category) {
-      return { success: false, error: "Category not found" };
+      if (!category) {
+        return { success: false, error: "Category not found" };
+      }
     }
 
-    // Auto-calculate inStock for each variant based on stockQuantity
-    const variantsWithStock = validatedData.variants.map((variant) => ({
-      ...variant,
-      inStock: variant.stockQuantity > 0,
-    }));
+    // Use placeholder image if no images provided
+    const productImages =
+      validatedData.images.length > 0 ? validatedData.images : ["https://placehold.co/600x400"];
 
     const product = await prisma.product.update({
       where: { id },
       data: {
-        ...validatedData,
-        variants: variantsWithStock,
+        title: validatedData.title,
+        slug: validatedData.slug,
+        shortDescription: validatedData.shortDescription,
+        description: validatedData.description,
+        images: productImages,
+        video: validatedData.video,
+        categoryId: validatedData.categoryId,
+        mrp: validatedData.mrp,
+        sellingPrice: validatedData.sellingPrice,
+        stock: validatedData.stock,
+        isActive: validatedData.isActive,
+        isFeatured: validatedData.isFeatured,
+        isBestSeller: validatedData.isBestSeller,
+        isOnSale: validatedData.isOnSale,
+        isNewArrival: validatedData.isNewArrival,
+        sections: validatedData.sections as any,
+        faqs: validatedData.faqs as any,
+        tags: validatedData.tags,
       },
       include: {
         category: true,
@@ -244,20 +266,15 @@ export async function deleteProduct(id: string) {
   }
 }
 
-// Update variant stock quantity
-export async function updateVariantStock(
-  productId: string,
-  variantIndex: number,
-  stockQuantity: number
-) {
+// Update stock quantity
+export async function updateStock(productId: string, stock: number) {
   await requireAdmin();
 
   try {
-    if (stockQuantity < 0) {
+    if (stock < 0) {
       return { success: false, error: "Stock quantity cannot be negative" };
     }
 
-    // Fetch the product
     const product = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -266,33 +283,15 @@ export async function updateVariantStock(
       return { success: false, error: "Product not found" };
     }
 
-    // Parse variants from JSON
-    const variants: any[] = Array.isArray(product.variants) ? [...product.variants] : [];
-
-    if (variantIndex < 0 || variantIndex >= variants.length) {
-      return { success: false, error: "Invalid variant index" };
-    }
-
-    // Update the specific variant
-    const currentVariant = variants[variantIndex];
-    variants[variantIndex] = {
-      ...currentVariant,
-      stockQuantity,
-      inStock: stockQuantity > 0,
-    };
-
-    // Update the product with new variants
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
-      data: {
-        variants: variants as any,
-      },
+      data: { stock },
     });
 
     revalidatePath("/admin/products");
     return { success: true, data: updatedProduct };
   } catch (error) {
-    console.error("Error updating variant stock:", error);
+    console.error("Error updating stock:", error);
     return { success: false, error: "Failed to update stock" };
   }
 }
@@ -371,6 +370,58 @@ export async function toggleProductSale(id: string) {
     return { success: true, data: updated };
   } catch (error) {
     console.error("Error toggling product sale:", error);
+    return { success: false, error: "Failed to update product" };
+  }
+}
+
+// Toggle product active status
+export async function toggleProductActive(id: string) {
+  await requireAdmin();
+
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { isActive: !product.isActive },
+    });
+
+    revalidatePath("/admin/products");
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("Error toggling product active:", error);
+    return { success: false, error: "Failed to update product" };
+  }
+}
+
+// Toggle product new arrival status
+export async function toggleProductNewArrival(id: string) {
+  await requireAdmin();
+
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { isNewArrival: !product.isNewArrival },
+    });
+
+    revalidatePath("/admin/products");
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("Error toggling product new arrival:", error);
     return { success: false, error: "Failed to update product" };
   }
 }

@@ -18,6 +18,7 @@ export function Footer() {
                   src={siteConfig.logo.path}
                   alt={siteConfig.logo.alt}
                   fill
+                  sizes="60px"
                   className="object-contain"
                 />
               </div>

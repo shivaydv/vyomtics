@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/prisma/db";
-import { transformProductsWithSignedUrls } from "@/lib/image-utils";
 
 // Get dashboard statistics with time filter
 export async function getDashboardStats(
@@ -205,11 +204,8 @@ export async function getTopProducts(limit: number = 5) {
       },
     });
 
-    // Transform images to signed URLs
-    const productsWithSignedUrls = await transformProductsWithSignedUrls(products);
-
     const data = topProducts.map((item) => {
-      const product = productsWithSignedUrls.find((p) => p.id === item.productId);
+      const product = products.find((p) => p.id === item.productId);
       return {
         id: item.productId,
         name: product?.name || "Unknown",

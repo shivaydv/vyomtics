@@ -45,6 +45,7 @@ export function Header() {
                 src={siteConfig.logo.path}
                 alt={siteConfig.logo.alt}
                 fill
+                sizes="96px"
                 className="rounded-lg object-contain"
               />
             </div>
@@ -78,12 +79,7 @@ export function Header() {
             <Suspense fallback={<HeaderButtonsSkeleton />}>
               {/* Mobile Visible Icons - Cart & Account */}
               <HeaderCartButton isMobile />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden "
-                asChild
-              >
+              <Button variant="ghost" size="icon" className="lg:hidden " asChild>
                 <Link href="/account">
                   <User className="h-5 w-5" />
                 </Link>
@@ -93,12 +89,7 @@ export function Header() {
               <div className="hidden lg:flex items-center gap-2">
                 <HeaderCartButton />
                 <HeaderWishlistButton />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className=""
-                  asChild
-                >
+                <Button variant="ghost" size="icon" className="" asChild>
                   <Link href="/account">
                     <User className="h-5 w-5" />
                   </Link>

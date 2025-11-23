@@ -7,10 +7,21 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "storage.googleapis.com",
+        hostname: "ik.imagekit.io",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
         pathname: "/**",
       },
     ],
+  },
+  // Cleaner console output
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
   },
 };
 

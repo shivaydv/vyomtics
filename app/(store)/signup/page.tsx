@@ -123,6 +123,7 @@ export default function SignupPage() {
               src={siteConfig.logo.path}
               alt={siteConfig.logo.alt}
               fill
+              sizes="128px"
               className="object-contain"
             />
           </div>

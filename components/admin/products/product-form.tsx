@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,17 +18,21 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { createProduct, updateProduct } from "@/actions/admin/product.actions";
 import { getCategories } from "@/actions/admin/category.actions";
-import { ArrowLeft, Plus, X, Loader2, Package } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { productSchema, type ProductFormData } from "@/lib/zod-schema";
+import { productSchema, type ProductFormData, ProductSection, ProductFaq } from "@/lib/zod-schema";
 import { MediaSection } from "@/components/admin/shared/media-section";
+import { SectionEditor } from "./section-editor";
+import { FaqEditor } from "./faq-editor";
 
 interface Category {
   id: string;
   name: string;
+  parentId?: string | null;
 }
 
 interface ProductFormProps {
@@ -36,7 +40,6 @@ interface ProductFormProps {
   mode: "create" | "edit";
 }
 
-// Loading skeleton component
 function FormSkeleton() {
   return (
     <div className="space-y-6">
@@ -53,20 +56,6 @@ function FormSkeleton() {
           <Skeleton className="h-10 w-32" />
         </div>
       </div>
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-64" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }
@@ -77,40 +66,48 @@ export function ProductForm({ product, mode }: ProductFormProps) {
   const [isInitializing, setIsInitializing] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  // Transform product data for edit mode
   const getDefaultValues = (): ProductFormData => {
     if (product) {
       return {
-        name: product.name,
-        slug: product.slug,
-        description: product.description,
+        title: product.title || "",
+        slug: product.slug || "",
+        shortDescription: product.shortDescription || "",
+        description: product.description || "",
         images: product.images || [],
-        categoryId: product.categoryId,
-        variants: Array.isArray(product.variants) ? product.variants : [],
+        video: product.video || "",
+        categoryId: product.categoryId || null,
+        mrp: product.mrp || 0,
+        sellingPrice: product.sellingPrice || 0,
+        stock: product.stock || 0,
+        isActive: product.isActive ?? true,
         isFeatured: product.isFeatured || false,
         isBestSeller: product.isBestSeller || false,
         isOnSale: product.isOnSale || false,
+        isNewArrival: product.isNewArrival || false,
+        sections: (product.sections as ProductSection[]) || [],
+        faqs: (product.faqs as ProductFaq[]) || [],
         tags: product.tags || [],
       };
     }
 
     return {
-      name: "",
+      title: "",
       slug: "",
+      shortDescription: "",
       description: "",
       images: [],
-      categoryId: "",
-      variants: [
-        {
-          weight: "",
-          price: 0,
-          compareAtPrice: null,
-          stockQuantity: 0,
-        },
-      ],
+      video: "",
+      categoryId: null,
+      mrp: 0,
+      sellingPrice: 0,
+      stock: 0,
+      isActive: true,
       isFeatured: false,
       isBestSeller: false,
       isOnSale: false,
+      isNewArrival: false,
+      sections: [],
+      faqs: [],
       tags: [],
     };
   };
@@ -125,24 +122,6 @@ export function ProductForm({ product, mode }: ProductFormProps) {
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: getDefaultValues(),
-  });
-
-  const {
-    fields: variantFields,
-    append: appendVariant,
-    remove: removeVariant,
-  } = useFieldArray({
-    control,
-    name: "variants",
-  });
-
-  const {
-    fields: tagFields,
-    append: appendTag,
-    remove: removeTag,
-  } = useFieldArray({
-    control: control as any,
-    name: "tags",
   });
 
   useEffect(() => {
@@ -162,17 +141,61 @@ export function ProductForm({ product, mode }: ProductFormProps) {
     fetchCategories();
   }, []);
 
-  // Auto-generate slug from name (in both create and edit modes)
-  const name = watch("name");
+  // Auto-generate slug from title
+  const title = watch("title");
   useEffect(() => {
-    if (name) {
-      const slug = name
+    if (title && mode === "create") {
+      const slug = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
       setValue("slug", slug);
     }
-  }, [name, setValue]);
+  }, [title, setValue, mode]);
+
+  // Build hierarchical category tree
+  const buildCategoryTree = (cats: Category[]): any[] => {
+    const map = new Map<string, any>();
+    const roots: any[] = [];
+
+    cats.forEach((cat) => {
+      map.set(cat.id, { ...cat, children: [] });
+    });
+
+    cats.forEach((cat) => {
+      const node = map.get(cat.id)!;
+      if (cat.parentId) {
+        const parent = map.get(cat.parentId);
+        if (parent) {
+          parent.children = parent.children || [];
+          parent.children.push(node);
+        } else {
+          roots.push(node);
+        }
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  };
+
+  // Flatten tree for display with indentation levels
+  const flattenTree = (
+    tree: any[],
+    level = 0,
+    result: Array<any & { level: number }> = []
+  ): Array<any & { level: number }> => {
+    tree.forEach((cat) => {
+      result.push({ ...cat, level });
+      if (cat.children && cat.children.length > 0) {
+        flattenTree(cat.children, level + 1, result);
+      }
+    });
+    return result;
+  };
+
+  const hierarchicalCategories = flattenTree(buildCategoryTree(categories));
 
   const onSubmit = async (data: ProductFormData) => {
     setIsLoading(true);
@@ -241,262 +264,221 @@ export function ProductForm({ product, mode }: ProductFormProps) {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Images - Moved to Top */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Images</CardTitle>
-              <CardDescription>Upload or manage product images</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Controller
-                control={control}
-                name="images"
-                render={({ field }) => (
-                  <MediaSection
-                    media={field.value || []}
-                    onChange={(newMedia) => field.onChange(newMedia)}
-                    maxFiles={10}
-                    maxSizeMB={5}
-                  />
-                )}
-              />
-              {errors.images && (
-                <p className="text-sm text-destructive mt-2">{errors.images.message}</p>
-              )}
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="media">Media</TabsTrigger>
+              <TabsTrigger value="sections">Sections</TabsTrigger>
+              <TabsTrigger value="faqs">FAQs</TabsTrigger>
+            </TabsList>
 
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Essential product details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Product Name *</Label>
-                <Input id="name" {...register("name")} placeholder="Enter product name" />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-              </div>
+            <TabsContent value="basic" className="space-y-6 mt-6">
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Basic Information</CardTitle>
+                  <CardDescription>Essential product details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title *</Label>
+                    <Input id="title" {...register("title")} placeholder="Enter product title" />
+                    {errors.title && (
+                      <p className="text-sm text-destructive">{errors.title.message}</p>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="slug">Slug *</Label>
-                <Input id="slug" {...register("slug")} placeholder="product-slug" />
-                {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="slug">Slug *</Label>
+                    <Input id="slug" {...register("slug")} placeholder="product-slug" />
+                    {errors.slug && (
+                      <p className="text-sm text-destructive">{errors.slug.message}</p>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  {...register("description")}
-                  placeholder="Enter product description"
-                  rows={5}
-                />
-                {errors.description && (
-                  <p className="text-sm text-destructive">{errors.description.message}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="shortDescription">Short Description</Label>
+                    <Input
+                      id="shortDescription"
+                      {...register("shortDescription")}
+                      placeholder="Brief description for product cards"
+                    />
+                    {errors.shortDescription && (
+                      <p className="text-sm text-destructive">{errors.shortDescription.message}</p>
+                    )}
+                  </div>
 
-          {/* Product Variants - Weight, Price, Stock */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Product Variants
-              </CardTitle>
-              <CardDescription>
-                Each variant has its own weight, price, and stock information
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {variantFields.map((field, index) => (
-                <Card key={field.id} className="border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Variant #{index + 1}</CardTitle>
-                      {variantFields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeVariant(index)}
-                          disabled={isLoading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Full Description *</Label>
+                    <Textarea
+                      id="description"
+                      {...register("description")}
+                      placeholder="Enter detailed product description"
+                      rows={8}
+                    />
+                    {errors.description && (
+                      <p className="text-sm text-destructive">{errors.description.message}</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pricing & Stock */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pricing & Inventory</CardTitle>
+                  <CardDescription>Set product pricing and stock levels</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="mrp">MRP *</Label>
+                      <Input
+                        id="mrp"
+                        type="number"
+                        step="0.01"
+                        {...register("mrp", { valueAsNumber: true })}
+                        placeholder="0.00"
+                      />
+                      {errors.mrp && (
+                        <p className="text-sm text-destructive">{errors.mrp.message}</p>
                       )}
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`variants.${index}.weight`}>Weight/Size *</Label>
-                        <Input
-                          id={`variants.${index}.weight`}
-                          {...register(`variants.${index}.weight`)}
-                          placeholder="e.g., 250g, 500g, 1kg"
-                          disabled={isLoading}
-                        />
-                        {errors.variants?.[index]?.weight && (
-                          <p className="text-sm text-destructive">
-                            {errors.variants[index]?.weight?.message}
-                          </p>
-                        )}
-                      </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`variants.${index}.stockQuantity`}>Stock Quantity *</Label>
-                        <Input
-                          id={`variants.${index}.stockQuantity`}
-                          type="number"
-                          {...register(`variants.${index}.stockQuantity`, {
-                            valueAsNumber: true,
-                          })}
-                          placeholder="0"
-                          disabled={isLoading}
-                        />
-                        {errors.variants?.[index]?.stockQuantity && (
-                          <p className="text-sm text-destructive">
-                            {errors.variants[index]?.stockQuantity?.message}
-                          </p>
-                        )}
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sellingPrice">Selling Price *</Label>
+                      <Input
+                        id="sellingPrice"
+                        type="number"
+                        step="0.01"
+                        {...register("sellingPrice", { valueAsNumber: true })}
+                        placeholder="0.00"
+                      />
+                      {errors.sellingPrice && (
+                        <p className="text-sm text-destructive">{errors.sellingPrice.message}</p>
+                      )}
                     </div>
+                  </div>
 
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`variants.${index}.price`}>Price *</Label>
-                        <Input
-                          id={`variants.${index}.price`}
-                          type="number"
-                          step="0.01"
-                          {...register(`variants.${index}.price`, { valueAsNumber: true })}
-                          placeholder="0.00"
-                          disabled={isLoading}
-                        />
-                        {errors.variants?.[index]?.price && (
-                          <p className="text-sm text-destructive">
-                            {errors.variants[index]?.price?.message}
-                          </p>
-                        )}
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="stock">Stock Quantity *</Label>
+                    <Input
+                      id="stock"
+                      type="number"
+                      {...register("stock", { valueAsNumber: true })}
+                      placeholder="0"
+                    />
+                    {errors.stock && (
+                      <p className="text-sm text-destructive">{errors.stock.message}</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`variants.${index}.compareAtPrice`}>Compare At Price</Label>
-                        <Input
-                          id={`variants.${index}.compareAtPrice`}
-                          type="number"
-                          step="0.01"
-                          {...register(`variants.${index}.compareAtPrice`, {
-                            valueAsNumber: true,
-                          })}
-                          placeholder="0.00"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <TabsContent value="media" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Images (Optional)</CardTitle>
+                  <CardDescription>
+                    Upload multiple product images. A placeholder will be used if no images are
+                    provided.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Controller
+                    control={control}
+                    name="images"
+                    render={({ field }) => (
+                      <MediaSection
+                        media={field.value || []}
+                        onChange={(newMedia) => field.onChange(newMedia)}
+                        maxFiles={10}
+                        maxSizeMB={5}
+                      />
+                    )}
+                  />
+                  {errors.images && (
+                    <p className="text-sm text-destructive mt-2">{errors.images.message}</p>
+                  )}
+                </CardContent>
+              </Card>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  appendVariant({
-                    weight: "",
-                    price: 0,
-                    compareAtPrice: null,
-                    stockQuantity: 0,
-                  })
-                }
-                className="w-full"
-                disabled={isLoading}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Variant
-              </Button>
-              {errors.variants && typeof errors.variants.message === "string" && (
-                <p className="text-sm text-destructive">{errors.variants.message}</p>
-              )}
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Video (Optional)</CardTitle>
+                  <CardDescription>Add a product video URL</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Input {...register("video")} placeholder="https://youtube.com/watch?v=..." />
+                  {errors.video && (
+                    <p className="text-sm text-destructive mt-2">{errors.video.message}</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Tags */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Tags</CardTitle>
-              <CardDescription>Add product tags for better organization</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {tagFields.map((field, index) => (
-                <div key={field.id} className="flex gap-2">
-                  <Input {...register(`tags.${index}`)} placeholder="Enter tag" />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeTag(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => appendTag("")}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Tag
-              </Button>
-            </CardContent>
-          </Card>
+            <TabsContent value="sections" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dynamic Content Sections</CardTitle>
+                  <CardDescription>
+                    Add custom sections like text blocks, bullet lists, or specifications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Controller
+                    control={control}
+                    name="sections"
+                    render={({ field }) => (
+                      <SectionEditor sections={field.value} onChange={field.onChange} />
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="faqs" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product FAQs</CardTitle>
+                  <CardDescription>
+                    Add frequently asked questions about this product
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Controller
+                    control={control}
+                    name="faqs"
+                    render={({ field }) => (
+                      <FaqEditor faqs={field.value} onChange={field.onChange} />
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="space-y-6">
-          {/* Category */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Category</CardTitle>
-              <CardDescription>Product category</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Controller
-                name="categoryId"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.categoryId && (
-                <p className="text-sm text-destructive mt-2">{errors.categoryId.message}</p>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Product Status */}
           <Card>
             <CardHeader>
               <CardTitle>Product Status</CardTitle>
-              <CardDescription>Special product flags</CardDescription>
+              <CardDescription>Control product visibility and flags</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="isActive">Active</Label>
+                <Controller
+                  name="isActive"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch checked={field.value} onCheckedChange={field.onChange} id="isActive" />
+                  )}
+                />
+              </div>
+
               <div className="flex items-center justify-between">
                 <Label htmlFor="isFeatured">Featured Product</Label>
                 <Controller
@@ -537,6 +519,65 @@ export function ProductForm({ product, mode }: ProductFormProps) {
                   )}
                 />
               </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="isNewArrival">New Arrival</Label>
+                <Controller
+                  name="isNewArrival"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      id="isNewArrival"
+                    />
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Category */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Category</CardTitle>
+              <CardDescription>Select product category (optional)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Controller
+                name="categoryId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={(value) => {
+                      if (value === "__uncategorized__") {
+                        field.onChange(null);
+                      } else {
+                        field.onChange(value);
+                      }
+                    }}
+                    value={field.value || "__uncategorized__"}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Uncategorized" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__uncategorized__">🗂️ Uncategorized</SelectItem>
+                      {hierarchicalCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          <span style={{ paddingLeft: `${category.level * 16}px` }}>
+                            {category.level > 0 ? "└─ " : "📁 "}
+                            {category.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.categoryId && (
+                <p className="text-sm text-destructive mt-2">{errors.categoryId.message}</p>
+              )}
             </CardContent>
           </Card>
         </div>

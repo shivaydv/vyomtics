@@ -37,6 +37,8 @@ import {
   toggleProductFeatured,
   toggleProductBestSeller,
   toggleProductSale,
+  toggleProductActive,
+  toggleProductNewArrival,
 } from "@/actions/admin/product.actions";
 import { toast } from "sonner";
 
@@ -51,6 +53,9 @@ export function ProductsTableClient({
   currentPage,
   totalPages,
 }: ProductsTableClientProps) {
+  console.log("[ProductsTableClient] Products received:", products.length);
+  console.log("[ProductsTableClient] First product:", products[0]);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [optimisticProducts, setOptimisticProducts] = useState(products);
@@ -65,8 +70,8 @@ export function ProductsTableClient({
     router.push(`/admin/products/edit/${slug}`);
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"?`)) return;
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Delete "${title}"?`)) return;
 
     const result = await deleteProduct(id);
     if (result.success) {
@@ -77,13 +82,30 @@ export function ProductsTableClient({
     }
   };
 
-  const toggleFeature = async (id: string, type: "featured" | "bestseller" | "sale") => {
-    const action =
-      type === "featured"
-        ? toggleProductFeatured
-        : type === "bestseller"
-        ? toggleProductBestSeller
-        : toggleProductSale;
+  const toggleFeature = async (
+    id: string,
+    type: "featured" | "bestseller" | "sale" | "active" | "newarrival"
+  ) => {
+    let action;
+    switch (type) {
+      case "featured":
+        action = toggleProductFeatured;
+        break;
+      case "bestseller":
+        action = toggleProductBestSeller;
+        break;
+      case "sale":
+        action = toggleProductSale;
+        break;
+      case "active":
+        action = toggleProductActive;
+        break;
+      case "newarrival":
+        action = toggleProductNewArrival;
+        break;
+      default:
+        return;
+    }
 
     const result = await action(id);
     if (result.success) {
@@ -119,38 +141,48 @@ export function ProductsTableClient({
                 </TableRow>
               ) : (
                 products.map((product: any) => {
-                  const firstVariant = product.variants?.[0];
-                  const totalStock = Array.isArray(product.variants)
-                    ? product.variants.reduce(
-                        (sum: number, v: any) => sum + (v.stockQuantity || 0),
-                        0
-                      )
-                    : 0;
-
                   return (
                     <TableRow key={product.id}>
                       <TableCell>
                         <Image
                           src={product.images?.[0] || "/placeholder.png"}
-                          alt={product.name}
+                          alt={product.title}
                           width={50}
                           height={50}
+                          sizes="50px"
                           className="rounded object-cover"
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.category?.name || "N/A"}</TableCell>
-                      <TableCell>{formatCurrency(firstVariant?.price || 0)}</TableCell>
+                      <TableCell className="font-medium">{product.title}</TableCell>
+                      <TableCell>{product.category?.name || "Uncategorized"}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {formatCurrency(product.sellingPrice)}
+                          </span>
+                          {product.mrp > product.sellingPrice && (
+                            <span className="text-xs text-muted-foreground line-through">
+                              {formatCurrency(product.mrp)}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={totalStock === 0 ? "text-muted-foreground" : ""}
+                          className={product.stock === 0 ? "text-muted-foreground" : ""}
                         >
-                          {totalStock} units
+                          {product.stock} units
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
+                          {/* Always show Active/Inactive status */}
+                          <Badge variant={product.isActive ? "outline" : "secondary"}>
+                            {product.isActive ? "Active" : "Inactive"}
+                          </Badge>
+
+                          {/* Feature badges */}
                           {product.isFeatured && (
                             <Badge variant="outline" className="gap-1">
                               <Star className="h-3 w-3" />
@@ -169,6 +201,11 @@ export function ProductsTableClient({
                               Sale
                             </Badge>
                           )}
+                          {product.isNewArrival && (
+                            <Badge variant="outline" className="gap-1">
+                              New
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -184,6 +221,9 @@ export function ProductsTableClient({
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => toggleFeature(product.id, "active")}>
+                              {product.isActive ? "Mark Inactive" : "Mark Active"}
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleFeature(product.id, "featured")}>
                               <Star className="h-4 w-4 mr-2" />
                               {product.isFeatured ? "Unfeature" : "Feature"}
@@ -198,9 +238,14 @@ export function ProductsTableClient({
                               <Tag className="h-4 w-4 mr-2" />
                               {product.isOnSale ? "Remove Sale" : "Mark Sale"}
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => toggleFeature(product.id, "newarrival")}
+                            >
+                              {product.isNewArrival ? "Remove New Arrival" : "Mark New Arrival"}
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleDelete(product.id, product.name)}
+                              onClick={() => handleDelete(product.id, product.title)}
                               className="text-destructive"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />

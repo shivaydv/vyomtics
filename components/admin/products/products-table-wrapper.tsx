@@ -19,6 +19,9 @@ export async function ProductsTableWrapper({ filters }: ProductsTableWrapperProp
   const allProducts = productsResult.success ? productsResult.data : [];
   const categories = categoriesResult.success ? categoriesResult.data : [];
 
+  console.log("[ProductsTableWrapper] Total products fetched:", allProducts?.length);
+  console.log("[ProductsTableWrapper] First product sample:", allProducts?.[0]);
+
   // Apply filters
   let filteredProducts = allProducts || [];
 
@@ -27,7 +30,7 @@ export async function ProductsTableWrapper({ filters }: ProductsTableWrapperProp
     const searchLower = filters.search.toLowerCase();
     filteredProducts = filteredProducts.filter(
       (product) =>
-        product.name?.toLowerCase().includes(searchLower) ||
+        product.title?.toLowerCase().includes(searchLower) ||
         product.category?.name?.toLowerCase().includes(searchLower)
     );
   }
@@ -39,18 +42,12 @@ export async function ProductsTableWrapper({ filters }: ProductsTableWrapperProp
     );
   }
 
-  // Status filter (inStock)
+  // Status filter (in stock based on stock quantity)
   if (filters.status) {
     if (filters.status === "in-stock") {
-      filteredProducts = filteredProducts.filter((product) => {
-        const variants = product.variants as any[];
-        return Array.isArray(variants) && variants.some((v: any) => v.inStock);
-      });
+      filteredProducts = filteredProducts.filter((product) => product.stock > 0);
     } else if (filters.status === "out-of-stock") {
-      filteredProducts = filteredProducts.filter((product) => {
-        const variants = product.variants as any[];
-        return !Array.isArray(variants) || !variants.some((v: any) => v.inStock);
-      });
+      filteredProducts = filteredProducts.filter((product) => product.stock === 0);
     }
   }
 

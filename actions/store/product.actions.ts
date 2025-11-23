@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/prisma/db";
-import { transformProductsWithSignedUrls, transformProductWithSignedUrls } from "@/lib/image-utils";
 
 export interface ProductFilters {
   categorySlug?: string;
@@ -177,12 +176,9 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
     const skip = (page - 1) * limit;
     const paginatedProducts = filteredProducts.slice(skip, skip + limit);
 
-    // Transform images to signed URLs
-    const productsWithSignedUrls = await transformProductsWithSignedUrls(paginatedProducts);
-
     return {
       success: true,
-      data: productsWithSignedUrls,
+      data: paginatedProducts,
       pagination: {
         page,
         limit,
@@ -234,13 +230,10 @@ export async function getProductWithReviews(slug: string) {
       { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } as Record<number, number>
     );
 
-    // Transform images to signed URLs
-    const productWithSignedUrls = await transformProductWithSignedUrls(product);
-
     return {
       success: true,
       data: {
-        ...productWithSignedUrls,
+        ...product,
         averageRating: Math.round(avgRating * 10) / 10,
         totalReviews: ratings.length,
         ratingDistribution,
@@ -283,10 +276,7 @@ export async function getRelatedProducts(productId: string, categoryId: string, 
       };
     });
 
-    // Transform images to signed URLs
-    const productsWithSignedUrls = await transformProductsWithSignedUrls(productsWithRatings);
-
-    return { success: true, data: productsWithSignedUrls };
+    return { success: true, data: productsWithRatings };
   } catch (error) {
     console.error("Error fetching related products:", error);
     return { success: false, error: "Failed to fetch related products" };

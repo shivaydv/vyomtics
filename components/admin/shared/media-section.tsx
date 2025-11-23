@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getSignedViewUrl } from "@/lib/cloud-storage";
 import { X, Upload, Loader2, ImagePlus, FileWarning, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -60,19 +59,11 @@ export function MediaSection({
       }
 
       try {
+        // All paths are now full ImageKit URLs - just map them directly
         const map: Record<string, string> = {};
-        await Promise.all(
-          media.map(async (path) => {
-            // Check if path is already a signed URL (starts with http/https)
-            if (path.startsWith("http://") || path.startsWith("https://")) {
-              map[path] = path; // Already signed
-            } else {
-              // Not signed yet, fetch signed URL
-              const signedUrl = await getSignedViewUrl(path);
-              map[path] = signedUrl;
-            }
-          })
-        );
+        media.forEach((path) => {
+          map[path] = path;
+        });
         setPreviewUrls(map);
       } catch (error) {
         toast.error("Failed to load some media files");
@@ -197,10 +188,10 @@ export function MediaSection({
         setUploadedFiles(updated);
         onChange?.(updated);
 
-        // Fetch viewable URLs for new uploads
+        // Add new full URLs to preview map (they're already full ImageKit URLs)
         const newMap = { ...previewUrls };
         for (const path of newPaths) {
-          newMap[path] = await getSignedViewUrl(path);
+          newMap[path] = path; // path is already a full URL from ImageKit
         }
         setPreviewUrls(newMap);
 

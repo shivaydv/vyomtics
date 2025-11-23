@@ -47,6 +47,7 @@ interface Product {
   slug: string;
   images: string[];
   variants: ProductVariant[];
+  isActive: boolean;
   isFeatured: boolean;
   isBestSeller: boolean;
   isOnSale: boolean;
@@ -69,7 +70,8 @@ export function ProductsTable() {
     setIsLoading(true);
     const result = await getProducts();
 
-    console.log("Fetched products:", result);
+    console.log("[OLD ProductsTable] Fetched products:", result);
+    console.log("[OLD ProductsTable] This component is being used!");
     if (result.success && result.data) {
       // Products already have signed URLs from the server action
       setProducts(result.data as any);
@@ -183,6 +185,7 @@ export function ProductsTable() {
                       src={product.images?.[0] || "/placeholder.svg"}
                       alt={product.name}
                       fill
+                      sizes="48px"
                       className="object-cover"
                     />
                   </div>
@@ -247,16 +250,14 @@ export function ProductsTable() {
                   </Button>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      product.variants?.some((v) => v.inStock && v.stockQuantity > 0)
-                        ? "outline"
-                        : "secondary"
-                    }
-                  >
-                    {product.variants?.some((v) => v.inStock && v.stockQuantity > 0)
-                      ? "In Stock"
-                      : "Out of Stock"}
+                  <Badge variant={product.isActive ? "outline" : "secondary"}>
+                    {(() => {
+                      console.log(
+                        `[ProductsTable] Product ${product.name} isActive:`,
+                        product.isActive
+                      );
+                      return product.isActive ? "Active" : "Inactive";
+                    })()}
                   </Badge>
                 </TableCell>
                 <TableCell>

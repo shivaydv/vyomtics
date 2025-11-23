@@ -1,0 +1,1 @@
+- if category delte show pop that delte all nested category or only this and make nested as separate

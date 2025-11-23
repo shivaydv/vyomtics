@@ -7,9 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MediaSection } from "@/components/admin/shared/media-section";
-import { createCategory, updateCategory } from "@/actions/admin/category.actions";
+import { createCategory, updateCategory, getCategories } from "@/actions/admin/category.actions";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -23,15 +30,27 @@ export function CategoryForm({ category, mode }: CategoryFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
     description: "",
     order: 0,
     isActive: true,
+    parentId: null as string | null,
   });
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      const result = await getCategories();
+      if (result.success && result.data) {
+        // Filter out current category to prevent self-parenting
+        const availableCategories = result.data.filter((cat: any) => cat.id !== category?.id);
+        setCategories(availableCategories);
+      }
+    };
+    fetchCategories();
+
     if (category) {
       setFormData({
         name: category.name || "",
@@ -39,6 +58,7 @@ export function CategoryForm({ category, mode }: CategoryFormProps) {
         description: category.description || "",
         order: category.order || 0,
         isActive: category.isActive ?? true,
+        parentId: category.parentId || null,
       });
       setMediaFiles(category.image ? [category.image] : []);
     }
@@ -55,6 +75,50 @@ export function CategoryForm({ category, mode }: CategoryFormProps) {
         .replace(/^-+|-+$/g, ""),
     });
   };
+
+  // Build hierarchical category tree
+  const buildCategoryTree = (cats: any[]): any[] => {
+    const map = new Map<string, any>();
+    const roots: any[] = [];
+
+    cats.forEach((cat) => {
+      map.set(cat.id, { ...cat, children: [] });
+    });
+
+    cats.forEach((cat) => {
+      const node = map.get(cat.id)!;
+      if (cat.parentId) {
+        const parent = map.get(cat.parentId);
+        if (parent) {
+          parent.children = parent.children || [];
+          parent.children.push(node);
+        } else {
+          roots.push(node);
+        }
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  };
+
+  // Flatten tree for display with indentation levels
+  const flattenTree = (
+    tree: any[],
+    level = 0,
+    result: Array<any & { level: number }> = []
+  ): Array<any & { level: number }> => {
+    tree.forEach((cat) => {
+      result.push({ ...cat, level });
+      if (cat.children && cat.children.length > 0) {
+        flattenTree(cat.children, level + 1, result);
+      }
+    });
+    return result;
+  };
+
+  const hierarchicalCategories = flattenTree(buildCategoryTree(categories));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,6 +261,35 @@ export function CategoryForm({ category, mode }: CategoryFormProps) {
               <CardDescription>Category configuration</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="parentId">Parent Category</Label>
+                <Select
+                  value={formData.parentId || "none"}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, parentId: value === "none" ? null : value })
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger id="parentId">
+                    <SelectValue placeholder="None (Top Level)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">📁 None (Top Level)</SelectItem>
+                    {hierarchicalCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span style={{ paddingLeft: `${cat.level * 16}px` }}>
+                          {cat.level > 0 ? "└─ " : "📁 "}
+                          {cat.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Select a parent to make this a subcategory
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="order">Priority</Label>
                 <Input

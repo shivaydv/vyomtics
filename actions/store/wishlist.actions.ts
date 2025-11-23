@@ -4,7 +4,6 @@ import { prisma } from "@/prisma/db";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { transformProductsWithSignedUrls } from "@/lib/image-utils";
 
 // Get user's wishlist
 export async function getWishlist() {
@@ -42,14 +41,10 @@ export async function getWishlist() {
       orderBy: { createdAt: "desc" },
     });
 
-    // Transform products with signed URLs
-    const products = wishlistItems.map((item) => item.product);
-    const productsWithSignedUrls = await transformProductsWithSignedUrls(products);
-
-    const enrichedItems = wishlistItems.map((item, index) => ({
+    const enrichedItems = wishlistItems.map((item) => ({
       id: item.id,
       productId: item.productId,
-      product: productsWithSignedUrls[index],
+      product: item.product,
       createdAt: item.createdAt,
     }));
 

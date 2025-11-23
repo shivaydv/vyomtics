@@ -54,6 +54,7 @@ export async function TopProducts() {
                       src={product.images[0] || "/placeholder.svg"}
                       alt={product.name}
                       fill
+                      sizes="48px"
                       className="object-contain p-1"
                     />
                   </div>

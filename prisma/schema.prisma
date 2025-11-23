@@ -89,38 +89,49 @@ model Verification {
 // E-commerce Models
 
 model Category {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
-  slug        String    @unique
+  slug        String     @unique
   description String?
   image       String?
-  order       Int       @default(0)
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  order       Int        @default(0)
+  isActive    Boolean    @default(true)
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[] @relation("CategoryHierarchy")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   products    Product[]
 
   @@map("category")
 }
 
 model Product {
-  id            String         @id @default(cuid())
-  name          String
-  slug          String         @unique
-  description   String
-  images        String[]       @default([])
-  categoryId    String
-  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  variants      Json // Array of {weight, price, compareAtPrice, stockQuantity, inStock}
-  isFeatured    Boolean        @default(false)
-  isBestSeller  Boolean        @default(false)
-  isOnSale      Boolean        @default(false)
-  tags          String[]       @default([])
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  orderItems    OrderItem[]
-  wishlistItems WishlistItem[]
-  reviews       Review[]
+  id               String         @id @default(cuid())
+  title            String
+  slug             String         @unique
+  shortDescription String?
+  description      String         @db.Text
+  images           String[]       @default([])
+  video            String?
+  categoryId       String?
+  category         Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  mrp              Float
+  sellingPrice     Float
+  stock            Int            @default(0)
+  isActive         Boolean        @default(true)
+  isFeatured       Boolean        @default(false)
+  isBestSeller     Boolean        @default(false)
+  isOnSale         Boolean        @default(false)
+  isNewArrival     Boolean        @default(false)
+  sections         Json           @default("[]") // Array of {type, title, content}
+  faqs             Json           @default("[]") // Array of {question, answer}
+  tags             String[]       @default([])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  orderItems       OrderItem[]
+  wishlistItems    WishlistItem[]
+  reviews          Review[]
 
   @@map("product")
 }
