@@ -26,7 +26,7 @@ export function Footer() {
             </div>
             <p className="text-sm text-foreground-muted mb-4">{siteConfig.description}</p>
             <div className="flex gap-3 flex-wrap">
-              {/* {siteConfig.social.facebook && (
+              {siteConfig.social.facebook && (
                 <Link
                   href={siteConfig.social.facebook}
                   target="_blank"
@@ -35,7 +35,7 @@ export function Footer() {
                 >
                   <Facebook className="h-4 w-4" />
                 </Link>
-              )} */}
+              )}
               {siteConfig.social.instagram && (
                 <Link
                   href={siteConfig.social.instagram}
@@ -46,7 +46,7 @@ export function Footer() {
                   <Instagram className="h-4 w-4" />
                 </Link>
               )}
-              {/* {siteConfig.social.twitter && (
+              {siteConfig.social.twitter && (
                 <Link
                   href={siteConfig.social.twitter}
                   target="_blank"
@@ -55,7 +55,7 @@ export function Footer() {
                 >
                   <Twitter className="h-4 w-4" />
                 </Link>
-              )} */}
+              )}
               {siteConfig.social.youtube && (
                 <Link
                   href={siteConfig.social.youtube}
@@ -66,7 +66,7 @@ export function Footer() {
                   <Youtube className="h-4 w-4" />
                 </Link>
               )}
-              {/* {siteConfig.social.linkedin && (
+              {siteConfig.social.linkedin && (
                 <Link
                   href={siteConfig.social.linkedin}
                   target="_blank"
@@ -75,7 +75,7 @@ export function Footer() {
                 >
                   <Linkedin className="h-4 w-4" />
                 </Link>
-              )} */}
+              )}
             </div>
           </div>
 

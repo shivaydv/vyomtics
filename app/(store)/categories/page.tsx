@@ -43,58 +43,40 @@ export default async function CategoriesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">All Categories</h1>
-          <p className="text-lg text-gray-600">
-            Explore our wide range of electronics, robotics, and DIY components
-          </p>
-        </div>
+    <div className="min-h-screen bg-white">
+      {/* Minimal Header */}
+      <div className="container mx-auto px-4 py-8 border-b border-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900">All Categories</h1>
       </div>
 
       {/* Categories Grid */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {categories.map((category) => {
             const minPrice = category.products[0]?.sellingPrice;
             const productCount = category._count.products;
 
             return (
               <Link key={category.id} href={`/categories/${category.slug}`} className="group">
-                <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                  <div className="relative aspect-square bg-gray-100">
+                <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+                  <div className="relative aspect-square bg-gray-50">
                     <Image
                       src={category.image || "/images/placeholder.png"}
                       alt={category.name}
                       fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-300"
-                      sizes="(max-width: 768px) 50vw, 25vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-200"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
                     />
                   </div>
 
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <div className="p-3">
+                    <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-1 group-hover:text-gray-700 transition-colors">
                       {category.name}
                     </h3>
 
-                    {category.description && (
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {category.description}
-                      </p>
-                    )}
-
-                    <div className="flex items-center justify-between">
-                      {minPrice && (
-                        <p className="text-sm font-semibold text-blue-600">
-                          from {formatPrice(minPrice)}
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-500">
-                        {productCount} {productCount === 1 ? "product" : "products"}
-                      </p>
-                    </div>
+                    <p className="text-xs text-gray-500">
+                      {productCount} {productCount === 1 ? "item" : "items"}
+                    </p>
                   </div>
                 </div>
               </Link>

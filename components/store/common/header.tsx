@@ -32,6 +32,10 @@ const navigationLinks = [
     href: "/products",
   },
   {
+    label: "Bulk Order",
+    href: "/bulk-order",
+  },
+  {
     label: "About Us",
     href: "/about",
   },
@@ -66,7 +70,7 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium transition-colors hover:text-blue-600 whitespace-nowrap"
+                className="text-sm font-medium transition-colors hover:text-gray-700 whitespace-nowrap"
               >
                 {link.label}
               </Link>

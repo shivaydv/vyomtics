@@ -3,6 +3,8 @@ import { prisma } from "@/prisma/db";
 import { ModernProductCard } from "@/components/store/products/modern-product-card";
 import { ProductFilters } from "@/components/store/products/product-filters";
 import { ProductSort } from "@/components/store/products/product-sort";
+import { MobileFilters } from "@/components/store/products/mobile-filters";
+import { ProductPagination } from "@/components/store/products/product-pagination";
 
 export const metadata = generatePageMetadata({
   path: "/products",
@@ -19,6 +21,7 @@ interface SearchParams {
   minPrice?: string;
   maxPrice?: string;
   inStock?: string;
+  page?: string;
 }
 
 export default async function ProductsPage({
@@ -27,20 +30,36 @@ export default async function ProductsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const { category, search, sort = "newest", minPrice, maxPrice, inStock } = params;
+  const { category, search, sort = "newest", minPrice, maxPrice, inStock, page = "1" } = params;
 
   // Build where clause
   const whereClause: any = {
     isActive: true,
   };
 
+  // Handle category filter - include nested categories
   if (category) {
     const categoryData = await prisma.category.findUnique({
       where: { slug: category },
-      select: { id: true },
+      select: {
+        id: true,
+        children: {
+          where: { isActive: true },
+          select: { id: true }
+        }
+      },
     });
+
     if (categoryData) {
-      whereClause.categoryId = categoryData.id;
+      // Include products from this category AND all its children
+      const categoryIds = [
+        categoryData.id,
+        ...categoryData.children.map(child => child.id)
+      ];
+
+      whereClause.categoryId = {
+        in: categoryIds
+      };
     }
   }
 
@@ -70,11 +89,17 @@ export default async function ProductsPage({
   if (sort === "name") orderBy = { title: "asc" };
   if (sort === "popular") orderBy = { isBestSeller: "desc" };
 
+  // Pagination
+  const currentPage = parseInt(page);
+  const pageSize = 20;
+  const skip = (currentPage - 1) * pageSize;
+
   const [products, totalCount, categories] = await Promise.all([
     prisma.product.findMany({
       where: whereClause,
       orderBy,
-      take: 24,
+      skip,
+      take: pageSize,
       select: {
         id: true,
         title: true,
@@ -91,77 +116,102 @@ export default async function ProductsPage({
       },
     }),
     prisma.product.count({ where: whereClause }),
+    // Fetch all categories with their children for nested display
     prisma.category.findMany({
       where: { isActive: true, parentId: null },
       orderBy: { order: "asc" },
-      select: { id: true, name: true, slug: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        children: {
+          where: { isActive: true },
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          }
+        }
+      },
     }),
   ]);
 
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-gray-50 border-b border-gray-100">
-        <div className="container mx-auto px-4 py-16 max-w-7xl">
-          <div className="max-w-3xl">
-            <nav className="text-sm text-gray-500 font-medium mb-6">
-              <a href="/" className="hover:text-gray-900 transition-colors">
-                Home
-              </a>
-              <span className="mx-3 text-gray-300">/</span>
-              <span className="text-gray-900">Products</span>
-            </nav>
-
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 tracking-tight mb-6">All Products</h1>
-            <p className="text-xl text-gray-600 leading-relaxed">
-              Browse our complete collection of electronics, robotics, and DIY components.
-              Find everything you need for your next project.
+      {/* Minimal Header */}
+      <div className="container mx-auto px-4 py-6 border-b border-gray-100">
+        <nav className="text-sm text-gray-500 font-medium mb-3">
+          <a href="/" className="hover:text-gray-900 transition-colors">
+            Home
+          </a>
+          <span className="mx-2 text-gray-300">/</span>
+          <span className="text-gray-900">Products</span>
+        </nav>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">All Products</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Browse our complete collection of electronics, robotics, and DIY components
             </p>
-
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mt-6">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              {totalCount} products available
-            </div>
+          </div>
+          {/* Mobile Filter Button */}
+          <div className="lg:hidden">
+            <MobileFilters categories={categories} />
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Filters Sidebar */}
-          <aside className="lg:w-72 flex-shrink-0">
-            <div className="sticky top-24">
-              <ProductFilters categories={categories} />
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Desktop Filters Sidebar */}
+          <aside className="hidden lg:block lg:w-64 flex-shrink-0">
+            <ProductFilters categories={categories} />
           </aside>
 
           {/* Products Grid */}
           <div className="flex-1">
             {/* Sort and View Options */}
-            <div className="bg-white border-b border-gray-100 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">Product Catalog</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {totalCount} {totalCount === 1 ? "Product" : "Products"}
+              </h2>
               <ProductSort />
             </div>
 
             {/* Products */}
             {products.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map((product) => (
-                  <ModernProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                  <span className="text-4xl">🔍</span>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {products.map((product) => (
+                    <ModernProductCard key={product.id} product={product} />
+                  ))}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-8">
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-8">
+                    <ProductPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <span className="text-3xl">🔍</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+                <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
                   We couldn't find any products matching your filters. Try adjusting your search or filter criteria.
                 </p>
                 <a
                   href="/products"
-                  className="inline-flex items-center justify-center px-8 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
+                  className="inline-flex items-center justify-center px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Clear All Filters
                 </a>

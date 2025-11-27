@@ -7,6 +7,7 @@ import { formatPrice } from "@/utils/format";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart-db";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface ModernProductCardProps {
   product: {
@@ -26,8 +27,9 @@ interface ModernProductCardProps {
 }
 
 export function ModernProductCard({ product }: ModernProductCardProps) {
-  const { addItem, isLoading } = useCart();
+  const { addItem, isProductLoading } = useCart();
   const [isHovered, setIsHovered] = useState(false);
+  const isAddingToCart = isProductLoading(product.id);
 
   const discount = Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100);
   const isOutOfStock = product.stock === 0;
@@ -44,9 +46,8 @@ export function ModernProductCard({ product }: ModernProductCardProps) {
 
     try {
       await addItem(product.id, product.title, 1);
-      toast.success("Added to cart");
     } catch (error) {
-      toast.error("Failed to add to cart");
+      // Error toast is handled in the hook
     }
   };
 
@@ -126,11 +127,20 @@ export function ModernProductCard({ product }: ModernProductCardProps) {
             {/* Add to Cart Button */}
             <Button
               onClick={handleAddToCart}
-              disabled={isOutOfStock || isLoading}
-              className="w-full h-10 text-sm font-medium bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300"
+              disabled={isOutOfStock || isAddingToCart}
+              className="w-full h-10 text-sm font-medium bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 disabled:opacity-50"
               size="sm"
             >
-              {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+              {isAddingToCart ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : isOutOfStock ? (
+                "Out of Stock"
+              ) : (
+                "Add to Cart"
+              )}
             </Button>
           </div>
         </div>

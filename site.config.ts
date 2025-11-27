@@ -3,7 +3,7 @@ export const siteConfig = {
   title: "Vyomtics",
   name: "Vyomtics",
   description:
-    "Vyomtics is your trusted Electronic drone solutions provider, offering cutting-edge technology and unparalleled service for all your aerial needs.",
+    "Vyomtics is a technology-driven organization dedicated to advancing Robotics, IoT, AI, and Drone education across India. We provide high-quality components, innovative solutions, and complete lab setup services for schools, colleges, universities, industries, and startups.",
   domain: "https://vyomtics.com",
   // Logo
   logo: {
@@ -13,19 +13,19 @@ export const siteConfig = {
 
   // Contact Information
   contact: {
-    email: "vyomtics@gmail.com",
-    phone: "+91 1234567890",
-    whatsapp: "911234567890", // Format: country code + number (no spaces or special characters)
-    address: "agra, uttar pradesh, india",
+    email: "sales@vyomtics.com",
+    phone: "+91 9758367474",
+    whatsapp: "919758367474", // Format: country code + number (no spaces or special characters)
+    address: "Vyomtics\nDayalbagh, Agra\nUttar Pradesh, India",
   },
 
   // Social Media Links
   social: {
-    facebook: "https://facebook.com",
-    instagram: "https://www.instagram.com",
-    twitter: "https://twitter.com",
-    youtube: "https://youtube.com",
-    linkedin: "https://linkedin.com",
+    facebook: "",
+    instagram: "https://www.instagram.com/vyomtics",
+    twitter: "",
+    youtube: "",
+    linkedin: "",
   },
 
   // Admin Panel

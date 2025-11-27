@@ -36,6 +36,7 @@ interface CartStore {
   isLoading: boolean;
   isInitialized: boolean;
   shippingConfig: ShippingConfig | null;
+  loadingProductIds: Set<string>;
   fetchCart: () => Promise<void>;
   fetchShippingConfig: () => Promise<void>;
   addItem: (productId: string, name: string, quantity?: number) => Promise<void>;
@@ -48,6 +49,7 @@ interface CartStore {
   getTotal: () => number;
   getTotalItems: () => number;
   isInCart: (productId: string) => boolean;
+  isProductLoading: (productId: string) => boolean;
 }
 
 export const useCart = create<CartStore>((set, get) => ({
@@ -55,6 +57,7 @@ export const useCart = create<CartStore>((set, get) => ({
   isLoading: false,
   isInitialized: false,
   shippingConfig: null,
+  loadingProductIds: new Set<string>(),
 
   fetchShippingConfig: async () => {
     try {
@@ -92,6 +95,9 @@ export const useCart = create<CartStore>((set, get) => ({
   },
 
   addItem: async (productId: string, name: string, quantity: number = 1) => {
+    // Add product to loading set
+    set({ loadingProductIds: new Set([...get().loadingProductIds, productId]) });
+
     const optimisticItem = get().items.find((item) => item.productId === productId);
 
     if (optimisticItem) {
@@ -131,6 +137,11 @@ export const useCart = create<CartStore>((set, get) => ({
       toast.error("Failed to add item to cart");
       // Refresh to sync
       await get().fetchCart();
+    } finally {
+      // Remove product from loading set
+      const newLoadingIds = new Set(get().loadingProductIds);
+      newLoadingIds.delete(productId);
+      set({ loadingProductIds: newLoadingIds });
     }
   },
 
@@ -236,8 +247,12 @@ export const useCart = create<CartStore>((set, get) => ({
     return get().items.some((item) => item.productId === productId);
   },
 
+  isProductLoading: (productId: string) => {
+    return get().loadingProductIds.has(productId);
+  },
+
   clearState: () => {
-    set({ items: [], isInitialized: false, isLoading: false });
+    set({ items: [], isInitialized: false, isLoading: false, loadingProductIds: new Set() });
   },
 }));
 

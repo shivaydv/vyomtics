@@ -89,138 +89,96 @@ export default async function CategoryPage({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Category Header */}
-      <div className="bg-gray-50 border-b border-gray-100">
-        <div className="container mx-auto px-4 py-16 max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <nav className="text-sm text-gray-500 font-medium">
-                <a href="/" className="hover:text-gray-900 transition-colors">
-                  Home
-                </a>
-                <span className="mx-3 text-gray-300">/</span>
-                <a href="/categories" className="hover:text-gray-900 transition-colors">
-                  Categories
-                </a>
-                <span className="mx-3 text-gray-300">/</span>
-                <span className="text-gray-900">{category.name}</span>
-              </nav>
-
-              <div>
-                <h1 className="text-4xl md:text-6xl font-bold text-gray-900 tracking-tight mb-4">{category.name}</h1>
-                {category.description && (
-                  <p className="text-xl text-gray-600 leading-relaxed max-w-xl">{category.description}</p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                {products.length} {products.length === 1 ? "product" : "products"} available
-              </div>
-            </div>
-
-            {category.image && (
-              <div className="relative h-64 lg:h-96 rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/50">
-                <Image
-                  src={category.image}
-                  alt={category.name}
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-700"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Minimal Breadcrumb Header */}
+      <div className="container mx-auto px-4 py-6 border-b border-gray-100">
+        <nav className="text-sm text-gray-500 font-medium mb-3">
+          <a href="/" className="hover:text-gray-900 transition-colors">
+            Home
+          </a>
+          <span className="mx-2 text-gray-300">/</span>
+          <a href="/categories" className="hover:text-gray-900 transition-colors">
+            Categories
+          </a>
+          <span className="mx-2 text-gray-300">/</span>
+          <span className="text-gray-900">{category.name}</span>
+        </nav>
+        <h1 className="text-2xl font-bold text-gray-900">{category.name}</h1>
+        {category.description && (
+          <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+        )}
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        {/* Subcategories Grid - Primary View if available */}
-        {category.children.length > 0 ? (
-          <div className="space-y-12">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Browse by Category</h2>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="container mx-auto px-4 py-8">
+        {/* Subcategories Section - Only show if there are child categories */}
+        {category.children.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Subcategories</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {category.children.map((child) => (
                 <a
                   key={child.id}
                   href={`/categories/${child.slug}`}
-                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 block"
+                  className="group block"
                 >
-                  {child.image ? (
-                    <Image
-                      src={child.image}
-                      alt={child.name}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                      <span className="text-4xl">📦</span>
+                  <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+                    <div className="relative aspect-square bg-gray-50">
+                      {child.image ? (
+                        <Image
+                          src={child.image}
+                          alt={child.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-200"
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                          <span className="text-2xl">📦</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="text-white font-bold text-xl mb-1">{child.name}</h3>
-                    <div className="flex items-center gap-2 text-white/80 text-sm font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                      <span>View Products</span>
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
+                    <div className="p-2">
+                      <h3 className="text-xs font-semibold text-gray-900 line-clamp-2 group-hover:text-gray-700 transition-colors">
+                        {child.name}
+                      </h3>
                     </div>
                   </div>
                 </a>
               ))}
             </div>
-
-            {/* Show products below if any exist directly in this parent category */}
-            {products.length > 0 && (
-              <div className="pt-16 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900">All Products in {category.name}</h2>
-                  <ProductSort />
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {products.map((product) => (
-                    <ModernProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-        ) : (
-          /* Products Grid - Only View if no subcategories */
-          <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white sticky top-0 z-10 py-4 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900">All Products</h2>
+        )}
+
+        {/* Products Section */}
+        {products.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {category.children.length > 0 ? `All Products in ${category.name}` : 'Products'}
+              </h2>
               <ProductSort />
             </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {products.map((product) => (
+                <ModernProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        )}
 
-            {products.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {products.map((product) => (
-                  <ModernProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                  <span className="text-4xl">🔍</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  We couldn't find any products in this category at the moment. Please check back later.
-                </p>
-                <a href="/products" className="inline-flex items-center justify-center px-8 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors mt-8">
-                  Browse All Products
-                </a>
-              </div>
-            )}
+        {/* No Products Message */}
+        {products.length === 0 && category.children.length === 0 && (
+          <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <span className="text-3xl">🔍</span>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+            <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
+              We couldn't find any products in this category at the moment.
+            </p>
+            <a href="/products" className="inline-flex items-center justify-center px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
+              Browse All Products
+            </a>
           </div>
         )}
       </div>

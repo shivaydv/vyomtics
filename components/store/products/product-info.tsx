@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { formatPrice } from "@/utils/format";
-import { Heart, Minus, Plus, Share2, ShoppingCart, Star, Copy, Check } from "lucide-react";
+import { Heart, Minus, Plus, Share2, ShoppingCart, Star, Copy, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/hooks/use-cart-db";
 import { useWishlist } from "@/hooks/use-wishlist";
@@ -39,9 +39,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { addItem, isLoading } = useCart();
-  const { isInWishlist, toggleItem } = useWishlist();
+  const { addItem, isProductLoading: isCartLoading } = useCart();
+  const { isInWishlist, toggleItem, isProductLoading: isWishlistLoading } = useWishlist();
   const inWishlist = isInWishlist(product.id);
+  const isAddingToCart = isCartLoading(product.id);
+  const isTogglingWishlist = isWishlistLoading(product.id);
 
   const discount = Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100);
   const isOutOfStock = product.stock === 0;
@@ -61,9 +63,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
     try {
       await addItem(product.id, product.title, quantity);
-      toast.success(`Added ${quantity} item(s) to cart`);
     } catch (error) {
-      toast.error("Failed to add to cart");
+      // Error toast is handled in the hook
     }
   };
 
@@ -71,7 +72,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
     try {
       await toggleItem(product.id);
     } catch (error) {
-      toast.error("Failed to update wishlist");
+      // Error is already handled in the hook with optimistic revert
     }
   };
 
@@ -206,12 +207,21 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
             <Button
               size="lg"
-              className="flex-1 bg-gray-900 hover:bg-black text-white h-12 rounded-lg text-base font-semibold shadow-lg shadow-gray-200 hover:shadow-xl hover:shadow-gray-300 transition-all transform hover:-translate-y-0.5"
+              className="flex-1 bg-gray-900 hover:bg-black text-white h-12 rounded-lg text-base font-semibold shadow-lg shadow-gray-200 hover:shadow-xl hover:shadow-gray-300 transition-all transform hover:-translate-y-0.5 disabled:opacity-50"
               onClick={handleAddToCart}
-              disabled={isLoading}
+              disabled={isAddingToCart}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Add to Cart
+              {isAddingToCart ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Add to Cart
+                </>
+              )}
             </Button>
           </div>
         ) : (
@@ -224,10 +234,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <div className="flex gap-3">
           <Button
             variant="outline"
-            className="flex-1 h-10 rounded-lg border hover:bg-gray-50 hover:border-gray-300 transition-all font-medium text-gray-700 text-sm"
+            className="flex-1 h-10 rounded-lg border hover:bg-gray-50 hover:border-gray-300 transition-all font-medium text-gray-700 text-sm disabled:opacity-50"
             onClick={handleWishlistToggle}
+            disabled={isTogglingWishlist}
           >
-            <Heart className={`h-4 w-4 mr-2 ${inWishlist ? "fill-red-500 text-red-500" : ""}`} />
+            {isTogglingWishlist ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Heart className={`h-4 w-4 mr-2 ${inWishlist ? "fill-red-500 text-red-500" : ""}`} />
+            )}
             {inWishlist ? "Saved" : "Wishlist"}
           </Button>
 

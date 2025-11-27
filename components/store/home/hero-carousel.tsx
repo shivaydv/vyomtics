@@ -49,7 +49,7 @@ const slides: Slide[] = [
     subtitle: "Professional Grade Printers",
     description:
       "High-speed, high-quality 3D printers and accessories for makers and professionals.",
-    image: "https://images.unsplash.com/photo-1562043054-28a2e7d4f5e6?w=1200",
+    image: "https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     cta: {
       text: "View Printers",
       href: "/categories/3d-printing",
