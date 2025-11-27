@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { Button } from "@/components/ui/button";
 import { Loader2, Heart, ShoppingCart, Trash2 } from "lucide-react";
-
+import { WishlistItemCard } from "@/components/store/account/wishlist-item-card";
 import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -49,9 +49,7 @@ export default function WishlistPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold flex items-center gap-3">
-              My Wishlist
-            </h2>
+            <h2 className="text-2xl font-bold flex items-center gap-3">My Wishlist</h2>
             <p className="text-muted-foreground mt-1">
               {items.length} {items.length === 1 ? "item" : "items"} saved for later
             </p>
@@ -92,9 +90,7 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => (
-              // add product card
-              // <ProductCard key={item.id} product={item.product} />
-              <></>
+              <WishlistItemCard key={item.id} item={item} />
             ))}
           </div>
         )}

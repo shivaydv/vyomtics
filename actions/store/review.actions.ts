@@ -150,6 +150,11 @@ export async function createOrUpdateReview(data: CreateReviewData) {
   }
 }
 
+// Submit review (simplified wrapper for UI)
+export async function submitReview(productId: string, rating: number, comment: string) {
+  return createOrUpdateReview({ productId, rating, comment });
+}
+
 // Check if user has reviewed product
 export async function hasUserReviewedProduct(productId: string) {
   try {

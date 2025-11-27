@@ -30,26 +30,16 @@ export async function initiateOrder(orderDetails: OrderDetails) {
       throw new Error(`Product not found: ${item.productId}`);
     }
 
-    const variant = (product.variants as any[]).find(
-      (v: any) => v.weight === item.variantDetails.weight
-    );
-
-    if (!variant) {
-      throw new Error(`Variant not found for ${product.name}`);
-    }
-
-    if (variant.stockQuantity < item.quantity) {
-      throw new Error(
-        `Insufficient stock for ${product.name} (${item.variantDetails.weight}). Available: ${variant.stockQuantity}`
-      );
+    if (product.stock < item.quantity) {
+      throw new Error(`Insufficient stock for ${product.title}. Available: ${product.stock}`);
     }
 
     // Verify price matches
-    if (variant.price !== item.variantDetails.price) {
-      throw new Error(`Price mismatch for ${product.name}`);
+    if (product.sellingPrice !== item.price) {
+      throw new Error(`Price mismatch for ${product.title}`);
     }
 
-    subtotal += variant.price * item.quantity;
+    subtotal += product.sellingPrice * item.quantity;
   }
 
   // Apply coupon discount
@@ -133,7 +123,7 @@ export async function initiateOrder(orderDetails: OrderDetails) {
           productId: item.productId,
           name: item.name,
           image: item.image,
-          variantDetails: item.variantDetails as any,
+          variantDetails: { price: item.price } as any,
           quantity: item.quantity,
         })),
       },

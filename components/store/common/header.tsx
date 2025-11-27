@@ -4,6 +4,7 @@ import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { SearchDialog } from "./search-dialog";
+import { ExpandedSearch } from "./expanded-search";
 import { AdminPanelLink } from "@/components/shared/admin-panel-link";
 import { HeaderCartButton } from "./header-cart-button";
 import { HeaderWishlistButton } from "./header-wishlist-button";
@@ -24,8 +25,16 @@ function HeaderButtonsSkeleton() {
 
 const navigationLinks = [
   {
+    label: "All Categories",
+    href: "/categories",
+  },
+  {
     label: "Products",
     href: "/products",
+  },
+  {
+    label: "About Us",
+    href: "/about",
   },
   {
     label: "Contact Us",
@@ -36,7 +45,7 @@ const navigationLinks = [
 export function Header() {
   return (
     <nav className="bg-background text-foreground border sticky top-0 z-50">
-      <div className="custom-container">
+      <div className="container mx-auto md:px-4">
         <div className="flex items-center justify-between gap-2 sm:gap-4 py-2">
           {/* Logo - Left */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -53,16 +62,19 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8 flex-1 justify-center">
+          <div className="hidden lg:flex items-center gap-4 flex-1 ml-6">
             {navigationLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium transition-colors"
+                className="text-sm font-medium transition-colors hover:text-blue-600 whitespace-nowrap"
               >
                 {link.label}
               </Link>
             ))}
+            <div className="flex-1 max-w-2xl mx-4">
+              <ExpandedSearch />
+            </div>
           </div>
 
           {/* Actions - Right */}
@@ -72,8 +84,10 @@ export function Header() {
               <AdminPanelLink />
             </div>
 
-            {/* Search - Desktop and Mobile */}
-            <SearchDialog />
+            {/* Search - Mobile Only */}
+            <div className="lg:hidden">
+              <SearchDialog />
+            </div>
 
             {/* Interactive Buttons with Suspense */}
             <Suspense fallback={<HeaderButtonsSkeleton />}>

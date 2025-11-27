@@ -265,10 +265,7 @@ export function CheckoutForm({ userEmail, savedAddresses }: CheckoutFormProps) {
         productId: item.productId,
         name: item.name,
         image: item.image,
-        variantDetails: {
-          weight: item.weight,
-          price: item.price,
-        },
+        price: item.price,
         quantity: item.quantity,
       }));
 
@@ -587,10 +584,7 @@ export function CheckoutForm({ userEmail, savedAddresses }: CheckoutFormProps) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-xs sm:text-sm truncate">{item.name}</h4>
-                      <div className="flex gap-2 sm:gap-4">
-                        <p className="text-xs text-muted-foreground">{item.weight}</p>
-                        <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                      </div>
+                      <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
                     <div className="text-xs sm:text-sm font-semibold shrink-0">
                       {formatPrice(item.price * item.quantity)}

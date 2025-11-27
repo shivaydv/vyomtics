@@ -136,8 +136,8 @@ export function OrderDetailsDialog({ orderId, open, onOpenChange }: OrderDetails
               </div>
               <div className="space-y-3">
                 {order.items.map((item) => {
-                  const variantDetails = item.variantDetails as { weight: string; price: number };
-                  const itemTotal = variantDetails.price * item.quantity;
+                  const variantDetails = item.variantDetails as { price?: number };
+                  const itemTotal = (variantDetails?.price || 0) * item.quantity;
                   return (
                     <div
                       key={item.id}
@@ -156,9 +156,7 @@ export function OrderDetailsDialog({ orderId, open, onOpenChange }: OrderDetails
                       )}
                       <div className="flex-1">
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {variantDetails.weight} × {item.quantity}
-                        </p>
+                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
                       <p className="font-medium">{formatCurrency(itemTotal)}</p>
                     </div>

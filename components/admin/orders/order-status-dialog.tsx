@@ -24,6 +24,7 @@ import { updateOrderStatus, getOrder } from "@/actions/admin/order.actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface OrderStatusDialogProps {
   orderId: string | null;
@@ -66,6 +67,7 @@ export function OrderStatusDialog({
 }: OrderStatusDialogProps) {
   const [orderStatus, setOrderStatus] = useState<OrderStatus>(OrderStatus.PENDING);
   const [fetchedStatus, setFetchedStatus] = useState<OrderStatus | null>(null);
+  const [trackingId, setTrackingId] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const router = useRouter();
@@ -80,6 +82,7 @@ export function OrderStatusDialog({
             const status = result.data.status as OrderStatus;
             setFetchedStatus(status);
             setOrderStatus(status);
+            setTrackingId(result.data.trackingId || "");
           }
         } catch (error) {
           console.error("Error fetching order status:", error);
@@ -104,7 +107,7 @@ export function OrderStatusDialog({
 
     setLoading(true);
     try {
-      const result = await updateOrderStatus(orderId, orderStatus);
+      const result = await updateOrderStatus(orderId, orderStatus, trackingId || undefined);
       if (!result.success) {
         toast.error(result.error || "Failed to update order status");
         return;
@@ -142,6 +145,18 @@ export function OrderStatusDialog({
                 </Badge>
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="trackingId">Tracking ID (Optional)</Label>
+              <Input
+                id="trackingId"
+                type="text"
+                placeholder="Enter tracking ID"
+                value={trackingId}
+                onChange={(e) => setTrackingId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Add a tracking ID for shipped orders</p>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="orderStatus">New Status</Label>

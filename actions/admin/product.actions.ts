@@ -296,6 +296,9 @@ export async function updateStock(productId: string, stock: number) {
   }
 }
 
+// Alias for updateStock
+export const updateProductStock = updateStock;
+
 // Toggle product featured status
 export async function toggleProductFeatured(id: string) {
   await requireAdmin();

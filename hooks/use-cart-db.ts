@@ -21,7 +21,6 @@ export interface CartItem {
   slug: string;
   image: string;
   price: number;
-  weight: string;
   quantity: number;
   inStock: boolean;
   stockQuantity: number;
@@ -39,7 +38,7 @@ interface CartStore {
   shippingConfig: ShippingConfig | null;
   fetchCart: () => Promise<void>;
   fetchShippingConfig: () => Promise<void>;
-  addItem: (productId: string, weight: string, name: string, quantity?: number) => Promise<void>;
+  addItem: (productId: string, name: string, quantity?: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -48,7 +47,7 @@ interface CartStore {
   getShipping: () => number;
   getTotal: () => number;
   getTotalItems: () => number;
-  isInCart: (productId: string, weight: string) => boolean;
+  isInCart: (productId: string) => boolean;
 }
 
 export const useCart = create<CartStore>((set, get) => ({
@@ -92,24 +91,20 @@ export const useCart = create<CartStore>((set, get) => ({
     }
   },
 
-  addItem: async (productId: string, weight: string, name: string, quantity: number = 1) => {
-    const optimisticItem = get().items.find(
-      (item) => item.productId === productId && item.weight === weight
-    );
+  addItem: async (productId: string, name: string, quantity: number = 1) => {
+    const optimisticItem = get().items.find((item) => item.productId === productId);
 
     if (optimisticItem) {
       // Optimistic update
       set({
         items: get().items.map((item) =>
-          item.productId === productId && item.weight === weight
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
+          item.productId === productId ? { ...item, quantity: item.quantity + quantity } : item
         ),
       });
     }
 
     try {
-      const result = await addToCartAction(productId, weight, quantity);
+      const result = await addToCartAction(productId, quantity);
       if (result.success) {
         // Refresh cart to get actual data
         await get().fetchCart();
@@ -119,7 +114,7 @@ export const useCart = create<CartStore>((set, get) => ({
         if (optimisticItem) {
           set({
             items: get().items.map((item) =>
-              item.productId === productId && item.weight === weight ? optimisticItem : item
+              item.productId === productId ? optimisticItem : item
             ),
           });
         }
@@ -237,8 +232,8 @@ export const useCart = create<CartStore>((set, get) => ({
     return get().items.reduce((total, item) => total + item.quantity, 0);
   },
 
-  isInCart: (productId: string, weight: string) => {
-    return get().items.some((item) => item.productId === productId && item.weight === weight);
+  isInCart: (productId: string) => {
+    return get().items.some((item) => item.productId === productId);
   },
 
   clearState: () => {

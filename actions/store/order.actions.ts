@@ -3,24 +3,6 @@
 import { prisma } from "@/prisma/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { buildImageKitUrl } from "@/lib/cloud-storage";
-
-// Helper function to transform order items with ImageKit URLs
-function transformOrderItemsWithSignedUrls(items: any[]) {
-  return items.map((item) => {
-    if (item.product?.images && item.product.images.length > 0) {
-      const imageUrls = item.product.images.map((img: string) => buildImageKitUrl(img));
-      return {
-        ...item,
-        product: {
-          ...item.product,
-          images: imageUrls,
-        },
-      };
-    }
-    return item;
-  });
-}
 
 // Get user's orders
 export async function getUserOrders() {
@@ -43,7 +25,7 @@ export async function getUserOrders() {
             product: {
               select: {
                 id: true,
-                name: true,
+                title: true,
                 images: true,
                 slug: true,
               },
@@ -56,13 +38,7 @@ export async function getUserOrders() {
       },
     });
 
-    // Transform all orders with ImageKit URLs
-    const ordersWithImageUrls = orders.map((order) => ({
-      ...order,
-      items: transformOrderItemsWithSignedUrls(order.items),
-    }));
-
-    return { success: true, data: ordersWithImageUrls };
+    return { success: true, data: orders };
   } catch (error) {
     console.error("Error fetching user orders:", error);
     return { success: false, error: "Failed to fetch orders" };
@@ -91,7 +67,7 @@ export async function getUserOrder(orderId: string) {
             product: {
               select: {
                 id: true,
-                name: true,
+                title: true,
                 images: true,
                 slug: true,
               },
@@ -105,13 +81,7 @@ export async function getUserOrder(orderId: string) {
       return { success: false, error: "Order not found" };
     }
 
-    // Transform order items with ImageKit URLs
-    const orderWithImageUrls = {
-      ...order,
-      items: transformOrderItemsWithSignedUrls(order.items),
-    };
-
-    return { success: true, data: orderWithImageUrls };
+    return { success: true, data: order };
   } catch (error) {
     console.error("Error fetching order:", error);
     return { success: false, error: "Failed to fetch order" };

@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Menu, User, Heart } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AdminPanelLink } from "@/components/shared/admin-panel-link";
@@ -15,8 +17,18 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ navigationLinks }: MobileMenuProps) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLinkClick = (href: string) => {
+    setOpen(false);
+    setTimeout(() => {
+      router.push(href);
+    }, 100);
+  };
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild className="lg:hidden">
         <Button variant="ghost" size="icon" className="">
           <Menu className="h-5 w-5" />
@@ -29,11 +41,13 @@ export function MobileMenu({ navigationLinks }: MobileMenuProps) {
             <h3 className="font-semibold text-xs text-muted-foreground uppercase mb-3 tracking-wider">
               Account
             </h3>
-            <Button variant="ghost" className="justify-start gap-3 h-10 px-2" asChild>
-              <Link href="/account">
-                <User className="h-5 w-5" />
-                <span>My Account</span>
-              </Link>
+            <Button
+              variant="ghost"
+              className="justify-start gap-3 h-10 px-2"
+              onClick={() => handleLinkClick("/account")}
+            >
+              <User className="h-5 w-5" />
+              <span>My Account</span>
             </Button>
             <HeaderWishlistButton isMobile />
             <div className="">
@@ -47,13 +61,13 @@ export function MobileMenu({ navigationLinks }: MobileMenuProps) {
               Shop
             </h3>
             {navigationLinks.map((link) => (
-              <Link
+              <button
                 key={link.href}
-                href={link.href}
-                className="text-sm font-medium hover:text-primary transition-colors py-2.5 px-2 rounded-md hover:bg-white/50"
+                onClick={() => handleLinkClick(link.href)}
+                className="text-sm font-medium hover:text-primary transition-colors py-2.5 px-2 rounded-md hover:bg-white/50 text-left"
               >
                 {link.label}
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -61,3 +75,4 @@ export function MobileMenu({ navigationLinks }: MobileMenuProps) {
     </Sheet>
   );
 }
+

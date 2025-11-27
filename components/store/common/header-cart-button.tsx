@@ -21,7 +21,7 @@ export function HeaderCartButton({ isMobile = false }: { isMobile?: boolean }) {
       >
         <ShoppingCart className="h-5 w-5" />
         {cartCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white text-primary text-xs flex items-center justify-center font-semibold">
+          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold ">
             {cartCount}
           </span>
         )}

@@ -6,7 +6,7 @@ import Image from "next/image";
 interface TopProductsListProps {
   products: Array<{
     id: string;
-    name: string;
+    title: string;
     sales: number;
     orders: number;
     image: string;
@@ -39,7 +39,7 @@ export function TopProductsList({ products }: TopProductsListProps) {
               <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
                 <Image
                   src={product.image}
-                  alt={product.name}
+                  alt={product.title}
                   fill
                   className="object-cover"
                   sizes="48px"
@@ -48,7 +48,7 @@ export function TopProductsList({ products }: TopProductsListProps) {
 
               {/* Product Info */}
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm truncate leading-tight">{product.name}</h4>
+                <h4 className="font-medium text-sm truncate leading-tight">{product.title}</h4>
                 <p className="text-xs text-muted-foreground mt-0.5">{product.category}</p>
               </div>
 

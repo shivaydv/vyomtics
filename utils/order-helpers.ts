@@ -62,7 +62,7 @@ export function verifyWebhookSignature(
 export async function deductStockForOrder(
   orderItems: Array<{
     productId: string;
-    variantDetails: { weight: string; price: number };
+    variantDetails?: { price: number };
     quantity: number;
   }>,
   tx: any // Prisma transaction client
@@ -70,37 +70,24 @@ export async function deductStockForOrder(
   for (const item of orderItems) {
     const product = await tx.product.findUnique({
       where: { id: item.productId },
+      select: { id: true, title: true, stock: true },
     });
 
     if (!product) {
       throw new Error(`Product not found: ${item.productId}`);
     }
 
-    const variants = product.variants as any[];
-    const itemWeight = item.variantDetails.weight;
-    const variantIndex = variants.findIndex((v: any) => v.weight === itemWeight);
-
-    if (variantIndex === -1) {
-      throw new Error(`Variant not found for product ${product.name} with weight ${itemWeight}`);
+    if (product.stock < item.quantity) {
+      throw new Error(`Insufficient stock for ${product.title}. Available: ${product.stock}`);
     }
-
-    const currentStock = variants[variantIndex].stockQuantity;
-    if (currentStock < item.quantity) {
-      throw new Error(`Insufficient stock for ${product.name} (${itemWeight})`);
-    }
-
-    const updatedVariants = [...variants];
-    const newStockQuantity = currentStock - item.quantity;
-
-    updatedVariants[variantIndex] = {
-      ...updatedVariants[variantIndex],
-      stockQuantity: newStockQuantity,
-      inStock: newStockQuantity > 0,
-    };
 
     await tx.product.update({
       where: { id: item.productId },
-      data: { variants: updatedVariants as any },
+      data: {
+        stock: {
+          decrement: item.quantity,
+        },
+      },
     });
   }
 }

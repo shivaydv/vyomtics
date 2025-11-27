@@ -23,11 +23,13 @@ export async function getWishlist() {
         product: {
           select: {
             id: true,
-            name: true,
+            title: true,
             slug: true,
             images: true,
-            variants: true,
-            description: true,
+            sellingPrice: true,
+            mrp: true,
+            stock: true,
+            shortDescription: true,
             category: {
               select: {
                 id: true,

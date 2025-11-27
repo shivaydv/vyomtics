@@ -7,7 +7,7 @@ export const siteConfig = {
   domain: "https://vyomtics.com",
   // Logo
   logo: {
-    path: "/logo.png",
+    path: "/logo.jpeg",
     alt: "Vyomtics Logo",
   },
 

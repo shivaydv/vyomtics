@@ -111,8 +111,7 @@ export function OrdersList() {
                 <div className="space-y-3 mb-4">
                   {order.items.map((item: any) => {
                     const itemImage = item.product?.images?.[0] || "/placeholder.svg";
-                    const itemName = item.productName || item.product?.name || "Product";
-                    const variantWeight = item.variantDetails?.weight || "N/A";
+                    const itemName = item.name || item.product?.title || "Product";
                     const variantPrice = item.variantDetails?.price || 0;
 
                     return (
@@ -129,9 +128,7 @@ export function OrdersList() {
                         </div>
                         <div className="flex-1">
                           <p className="font-medium">{itemName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {variantWeight} × {item.quantity}
-                          </p>
+                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
                         <p className="font-semibold">{formatPrice(variantPrice * item.quantity)}</p>
                       </div>
@@ -177,9 +174,7 @@ export function OrdersList() {
                             <div className="space-y-3">
                               {selectedOrder.items.map((item: any) => {
                                 const itemImage = item.product?.images?.[0] || "/placeholder.svg";
-                                const itemName =
-                                  item.productName || item.product?.name || "Product";
-                                const variantWeight = item.variantDetails?.weight || "N/A";
+                                const itemName = item.name || item.product?.title || "Product";
                                 const variantPrice = item.variantDetails?.price || 0;
 
                                 return (
@@ -200,7 +195,7 @@ export function OrdersList() {
                                     <div className="flex-1">
                                       <p className="font-medium">{itemName}</p>
                                       <p className="text-sm text-muted-foreground">
-                                        {variantWeight} × {item.quantity}
+                                        Qty: {item.quantity}
                                       </p>
                                     </div>
                                     <p className="font-semibold">

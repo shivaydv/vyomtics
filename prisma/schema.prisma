@@ -96,6 +96,7 @@ model Category {
   image       String?
   order       Int        @default(0)
   isActive    Boolean    @default(true)
+  isFeatured  Boolean    @default(false)
   parentId    String?
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children    Category[] @relation("CategoryHierarchy")
@@ -179,6 +180,7 @@ model Order {
   status OrderStatus @default(PENDING)
 
   couponCode String?
+  trackingId String? // Optional tracking ID for shipment
 
   subtotal    Float // sum of items
   discount    Float @default(0) // total discount applied (from coupon or other)

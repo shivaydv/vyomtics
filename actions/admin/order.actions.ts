@@ -58,7 +58,7 @@ export async function getOrders(filters?: {
             product: {
               select: {
                 id: true,
-                name: true,
+                title: true,
                 images: true,
               },
             },
@@ -94,7 +94,7 @@ export async function getOrder(id: string) {
             product: {
               select: {
                 id: true,
-                name: true,
+                title: true,
                 images: true,
                 slug: true,
               },
@@ -116,13 +116,16 @@ export async function getOrder(id: string) {
 }
 
 // Update order status
-export async function updateOrderStatus(id: string, status: OrderStatus) {
+export async function updateOrderStatus(id: string, status: OrderStatus, trackingId?: string) {
   await requireAdmin();
 
   try {
     const order = await prisma.order.update({
       where: { id },
-      data: { status },
+      data: {
+        status,
+        ...(trackingId !== undefined && { trackingId }),
+      },
       include: {
         user: {
           select: {
@@ -139,6 +142,24 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
   } catch (error) {
     console.error("Error updating order status:", error);
     return { success: false, error: "Failed to update order status" };
+  }
+}
+
+// Update tracking ID
+export async function updateTrackingId(id: string, trackingId: string) {
+  await requireAdmin();
+
+  try {
+    const order = await prisma.order.update({
+      where: { id },
+      data: { trackingId },
+    });
+
+    revalidatePath("/admin/orders");
+    return { success: true, data: order, message: "Tracking ID updated successfully" };
+  } catch (error) {
+    console.error("Error updating tracking ID:", error);
+    return { success: false, error: "Failed to update tracking ID" };
   }
 }
 

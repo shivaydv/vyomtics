@@ -17,7 +17,7 @@ export function HeaderWishlistButton({ isMobile = false }: { isMobile?: boolean 
           <Heart className="h-5 w-5" />
           <span>Wishlist</span>
           {wishlistCount > 0 && (
-            <span className="ml-auto h-5 w-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-semibold">
+            <span className="ml-auto h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
               {wishlistCount}
             </span>
           )}
@@ -32,7 +32,7 @@ export function HeaderWishlistButton({ isMobile = false }: { isMobile?: boolean 
       <Link href="/account/wishlist">
         <Heart className="h-5 w-5 " />
         {wishlistCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white text-primary text-xs flex items-center justify-center font-semibold">
+          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold ">
             {wishlistCount}
           </span>
         )}

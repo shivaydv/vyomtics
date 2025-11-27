@@ -45,25 +45,27 @@ export function AccountNav() {
             href={item.href}
             onClick={() => setSheetOpen(false)}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm",
-              isActive ? "bg-primary text-white" : "text-foreground hover:bg-muted"
+              "flex items-center gap-3 px-3 py-2 rounded-md transition-all text-sm font-medium",
+              isActive
+                ? "bg-primary text-white shadow-sm"
+                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
             )}
           >
-            <Icon className="h-5 w-5" />
-            <span className="font-medium">{item.name}</span>
+            <Icon className="h-4 w-4" />
+            <span>{item.name}</span>
           </Link>
         );
       })}
 
       <button
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-destructive hover:bg-destructive/10 w-full mt-2 text-sm"
+        className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 w-full mt-1"
         onClick={() => {
           handleLogout();
           setSheetOpen(false);
         }}
       >
-        <LogOut className="h-5 w-5" />
-        <span className="font-medium">Logout</span>
+        <LogOut className="h-4 w-4" />
+        <span>Logout</span>
       </button>
     </>
   );
@@ -91,7 +93,7 @@ export function AccountNav() {
 
       {/* Desktop Sidebar Navigation */}
       <aside className="hidden lg:block">
-        <nav className="bg-white rounded-lg border border-border p-3 sticky top-24">
+        <nav className="bg-white rounded-lg border border-gray-200 p-2 sticky top-24">
           <NavContent />
         </nav>
       </aside>

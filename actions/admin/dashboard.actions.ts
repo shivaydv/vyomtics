@@ -208,7 +208,7 @@ export async function getTopProducts(limit: number = 5) {
       const product = products.find((p) => p.id === item.productId);
       return {
         id: item.productId,
-        name: product?.name || "Unknown",
+        title: product?.title || "Unknown",
         sales: item._sum.quantity || 0,
         orders: item._count.productId,
         image: product?.images[0] || "/placeholder.svg",

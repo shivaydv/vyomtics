@@ -69,7 +69,7 @@ export async function confirmOrder({
           paymentStatus: "SUCCESS",
           razorpayPaymentId: razorpay_payment_id,
           paymentCapturedAt: new Date(),
-          
+
           paymentMethod: "RAZORPAY",
         },
         include: {
@@ -81,7 +81,7 @@ export async function confirmOrder({
       await deductStockForOrder(
         order.items.map((item) => ({
           productId: item.productId,
-          variantDetails: item.variantDetails as { weight: string; price: number },
+          variantDetails: item.variantDetails as { price: number },
           quantity: item.quantity,
         })),
         tx

@@ -37,6 +37,7 @@ export function CategoryForm({ category, mode }: CategoryFormProps) {
     description: "",
     order: 0,
     isActive: true,
+    isFeatured: false,
     parentId: null as string | null,
   });
 
@@ -58,6 +59,7 @@ export function CategoryForm({ category, mode }: CategoryFormProps) {
         description: category.description || "",
         order: category.order || 0,
         isActive: category.isActive ?? true,
+        isFeatured: category.isFeatured ?? false,
         parentId: category.parentId || null,
       });
       setMediaFiles(category.image ? [category.image] : []);
@@ -316,6 +318,19 @@ export function CategoryForm({ category, mode }: CategoryFormProps) {
                   id="isActive"
                   checked={formData.isActive}
                   onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isFeatured">Featured</Label>
+                  <p className="text-xs text-muted-foreground">Show in featured section (max 5)</p>
+                </div>
+                <Switch
+                  id="isFeatured"
+                  checked={formData.isFeatured}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
                   disabled={isLoading}
                 />
               </div>

@@ -16,7 +16,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className="min-h-screen py-8">
-      <div className="custom-container">
+      <div className="container mx-auto">
         <CheckoutClient userEmail={session?.user?.email} savedAddresses={savedAddresses} />
       </div>
     </div>

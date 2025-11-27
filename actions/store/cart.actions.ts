@@ -52,22 +52,17 @@ export async function getCart() {
       return { success: true, data: { items: [] } };
     }
 
-    // Fetch product details for all cart items (optimized - only select needed fields)
+    // Fetch product details for all cart items
     const productIds = cart.items.map((item) => item.productId);
     const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
+      where: { id: { in: productIds }, isActive: true },
       select: {
         id: true,
-        name: true,
+        title: true,
         slug: true,
         images: true,
-        variants: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        sellingPrice: true,
+        stock: true,
       },
     });
 
@@ -77,21 +72,16 @@ export async function getCart() {
         const product = products.find((p) => p.id === item.productId);
         if (!product) return null;
 
-        // Find the specific variant
-        const variant = (product.variants as any[]).find((v) => v.weight === item.weight);
-        if (!variant) return null;
-
         return {
           id: item.id,
           productId: product.id,
-          name: product.name,
+          name: product.title,
           slug: product.slug,
-          image: product.images[0] || "/placeholder.svg",
-          price: variant.price,
-          weight: item.weight,
+          image: product.images[0] || "/images/placeholder.png",
+          price: product.sellingPrice,
           quantity: item.quantity,
-          inStock: variant.inStock,
-          stockQuantity: variant.stockQuantity,
+          inStock: product.stock > 0,
+          stockQuantity: product.stock,
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -104,7 +94,7 @@ export async function getCart() {
 }
 
 // Add item to cart
-export async function addToCart(productId: string, weight: string, quantity: number = 1) {
+export async function addToCart(productId: string, quantity: number = 1) {
   try {
     const cartId = await getCartId();
 
@@ -119,7 +109,7 @@ export async function addToCart(productId: string, weight: string, quantity: num
         cartId_productId_weight: {
           cartId,
           productId,
-          weight,
+          weight: "default",
         },
       },
     });
@@ -136,7 +126,7 @@ export async function addToCart(productId: string, weight: string, quantity: num
         data: {
           cartId,
           productId,
-          weight,
+          weight: "default",
           quantity,
         },
       });

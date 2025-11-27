@@ -1,5 +1,5 @@
-import { OrdersList } from "@/components/store/account/orders-list";
+import { ModernOrdersList } from "@/components/store/account/modern-orders-list";
 
 export default function OrdersPage() {
-  return <OrdersList />;
+  return <ModernOrdersList />;
 }

@@ -38,7 +38,6 @@ export function CartItem({ item }: CartItemProps) {
             {item.name}
           </h3>
         </Link>
-        <p className="text-sm text-foreground-muted mb-2">Weight: {item.weight}</p>
         <p className="text-lg font-bold text-primary">{formatPrice(item.price)}</p>
       </div>
 

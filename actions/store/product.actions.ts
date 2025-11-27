@@ -65,7 +65,7 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
     // Search filter
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
+        { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
         { tags: { has: search } },
       ];
@@ -94,10 +94,10 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
         orderBy = { createdAt: "desc" };
         break;
       case "name-asc":
-        orderBy = { name: "asc" };
+        orderBy = { title: "asc" };
         break;
       case "name-desc":
-        orderBy = { name: "desc" };
+        orderBy = { title: "desc" };
         break;
       case "featured":
         orderBy = { isFeatured: "desc" };
@@ -119,11 +119,10 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
       orderBy,
     });
 
-    // Filter by availability (variants are in JSON)
+    // Filter by availability (direct stock check)
     if (availability && availability !== "all") {
       products = products.filter((product) => {
-        const variants = Array.isArray(product.variants) ? product.variants : [];
-        const hasStock = variants.some((v: any) => v.inStock && v.stockQuantity > 0);
+        const hasStock = product.stock > 0;
 
         if (availability === "in-stock") {
           return hasStock;
@@ -155,17 +154,9 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
 
     // Sort by price or rating (in memory)
     if (sortBy === "price-asc") {
-      filteredProducts.sort((a, b) => {
-        const aMinPrice = Math.min(...(a.variants as any[]).map((v: any) => v.price));
-        const bMinPrice = Math.min(...(b.variants as any[]).map((v: any) => v.price));
-        return aMinPrice - bMinPrice;
-      });
+      filteredProducts.sort((a, b) => a.sellingPrice - b.sellingPrice);
     } else if (sortBy === "price-desc") {
-      filteredProducts.sort((a, b) => {
-        const aMaxPrice = Math.max(...(a.variants as any[]).map((v: any) => v.price));
-        const bMaxPrice = Math.max(...(b.variants as any[]).map((v: any) => v.price));
-        return bMaxPrice - aMaxPrice;
-      });
+      filteredProducts.sort((a, b) => b.sellingPrice - a.sellingPrice);
     } else if (sortBy === "rating") {
       filteredProducts.sort((a, b) => b.averageRating - a.averageRating);
     }

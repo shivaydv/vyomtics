@@ -33,20 +33,14 @@ import {
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/format";
 
-interface ProductVariant {
-  weight: string;
-  price: number;
-  compareAtPrice: number | null;
-  stockQuantity: number;
-  inStock: boolean;
-}
-
 interface Product {
   id: string;
-  name: string;
+  title: string;
   slug: string;
   images: string[];
-  variants: ProductVariant[];
+  mrp: number;
+  sellingPrice: number;
+  stock: number;
   isActive: boolean;
   isFeatured: boolean;
   isBestSeller: boolean;
@@ -183,7 +177,7 @@ export function ProductsTable() {
                   <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted">
                     <Image
                       src={product.images?.[0] || "/placeholder.svg"}
-                      alt={product.name}
+                      alt={product.title}
                       fill
                       sizes="48px"
                       className="object-cover"
@@ -192,7 +186,7 @@ export function ProductsTable() {
                 </TableCell>
                 <TableCell>
                   <div>
-                    <p className="font-medium">{product.name}</p>
+                    <p className="font-medium">{product.title}</p>
                     <div className="flex gap-1 mt-1">
                       {product.isFeatured && (
                         <Badge variant="outline" className="text-xs">
@@ -218,23 +212,11 @@ export function ProductsTable() {
                 <TableCell className="text-muted-foreground">{product.category.name}</TableCell>
                 <TableCell>
                   <div>
-                    {product.variants && product.variants.length > 0 ? (
-                      <>
-                        <p className="font-medium">
-                          {formatCurrency(Math.min(...product.variants.map((v) => v.price)))}
-                          {product.variants.length > 1 && (
-                            <span className="text-muted-foreground">
-                              {" "}
-                              - {formatCurrency(Math.max(...product.variants.map((v) => v.price)))}
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {product.variants.length} variant{product.variants.length > 1 ? "s" : ""}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-muted-foreground text-sm">No variants</p>
+                    <p className="font-medium">{formatCurrency(product.sellingPrice)}</p>
+                    {product.mrp > product.sellingPrice && (
+                      <p className="text-xs text-muted-foreground line-through">
+                        {formatCurrency(product.mrp)}
+                      </p>
                     )}
                   </div>
                 </TableCell>
@@ -246,14 +228,14 @@ export function ProductsTable() {
                     className="gap-1"
                   >
                     <Package className="h-3 w-3" />
-                    {product.variants?.reduce((sum, v) => sum + v.stockQuantity, 0) || 0}
+                    {product.stock || 0}
                   </Button>
                 </TableCell>
                 <TableCell>
                   <Badge variant={product.isActive ? "outline" : "secondary"}>
                     {(() => {
                       console.log(
-                        `[ProductsTable] Product ${product.name} isActive:`,
+                        `[ProductsTable] Product ${product.title} isActive:`,
                         product.isActive
                       );
                       return product.isActive ? "Active" : "Inactive";
@@ -311,7 +293,7 @@ export function ProductsTable() {
         onOpenChange={setIsDeleteOpen}
         onConfirm={confirmDelete}
         title="Delete Product"
-        description={`Are you sure you want to delete "${productToDelete?.name}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete "${productToDelete?.title}"? This action cannot be undone.`}
       />
 
       <StockDialog
