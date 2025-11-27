@@ -21,7 +21,7 @@ export function generatePageMetadata({
   const pageTitle = title ? `${title} - ${siteConfig.name}` : siteConfig.title;
   const pageDescription = description || siteConfig.description;
   const url = `${siteConfig.domain}${path}`;
-  const ogImage = image || `${siteConfig.domain}/og-image.png`;
+  const ogImage = image || `${siteConfig.domain}/opengraph-image.jpeg`;
 
   return {
     title: pageTitle,

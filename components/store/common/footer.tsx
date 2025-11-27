@@ -24,7 +24,7 @@ export function Footer() {
               </div>
               {/* <h3 className="text-lg font-semibold text-primary">{siteConfig.name}</h3> */}
             </div>
-            <p className="text-sm text-foreground-muted mb-4">{siteConfig.description}</p>
+            <p className="text-sm text-foreground-muted mb-4 line-clamp-3">{siteConfig.description}</p>
             <div className="flex gap-3 flex-wrap">
               {siteConfig.social.facebook && (
                 <Link

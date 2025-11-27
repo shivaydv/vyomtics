@@ -51,8 +51,8 @@ export function Header() {
       <div className="container mx-auto md:px-4">
         <div className="flex items-center justify-between gap-2 sm:gap-4 py-2">
           {/* Logo - Left */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="rounded-lg relative w-24 h-12">
+          <Link href="/" className="flex items-center gap-1 shrink-0">
+            <div className="rounded-lg relative w-12 h-12">
               <Image
                 src={siteConfig.logo.path}
                 alt={siteConfig.logo.alt}
@@ -61,11 +61,11 @@ export function Header() {
                 className="rounded-lg object-contain"
               />
             </div>
-            {/* <span className="text-xl font-bold text-white hidden sm:inline">{siteConfig.name}</span> */}
+            <span className="text-xl font-semibold  sm:inline">{siteConfig.name}</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-4 flex-1 ml-6">
+          <div className="hidden lg:flex items-center gap-4 flex-1">
             {navigationLinks.map((link) => (
               <Link
                 key={link.href}
