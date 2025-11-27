@@ -1,5 +1,5 @@
 import { prisma } from "@/prisma/db";
-import { ProductCard } from "@/components/store/products/product-card";
+import { ModernProductCard } from "@/components/store/products/modern-product-card";
 
 interface RelatedProductsProps {
   categoryId: string;
@@ -36,12 +36,17 @@ export async function RelatedProducts({ categoryId, currentProductId }: RelatedP
   if (products.length === 0) return null;
 
   return (
-    <section className="mt-16 pt-12 border-t border-gray-200">
-      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Related Products</h2>
+    <section className="mt-16 pt-12 border-t">
+      <div className="mb-12">
+        <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+          You May Also Like
+        </p>
+        <h2 className="text-3xl md:text-4xl font-semibold text-gray-900">Related Products</h2>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ModernProductCard key={product.id} product={product} />
         ))}
       </div>
     </section>

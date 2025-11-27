@@ -24,23 +24,19 @@ interface ProductCarouselProps {
 export function ProductCarousel({ products }: ProductCarouselProps) {
   return (
     <div className="relative">
-      {/* Left Gradient Overlay */}
-      {/* <div className="absolute left-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" /> */}
-
-      {/* Right Gradient Overlay */}
-      {/* <div className="absolute right-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" /> */}
-
       <Carousel
         opts={{
           align: "start",
           loop: true,
           dragFree: true,
+          duration: 40,
         }}
         plugins={[
           Autoplay({
-            delay: 2500,
+            delay: 2000,
             stopOnInteraction: false,
             stopOnMouseEnter: true,
+            playOnInit: true,
           }),
         ]}
         className="w-full"

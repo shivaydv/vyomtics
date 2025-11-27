@@ -84,8 +84,16 @@ export function ProductForm({ product, mode }: ProductFormProps) {
         isBestSeller: product.isBestSeller || false,
         isOnSale: product.isOnSale || false,
         isNewArrival: product.isNewArrival || false,
-        sections: (product.sections as ProductSection[]) || [],
-        faqs: (product.faqs as ProductFaq[]) || [],
+        sections: Array.isArray(product.sections)
+          ? product.sections
+          : typeof product.sections === 'string'
+            ? JSON.parse(product.sections)
+            : [],
+        faqs: Array.isArray(product.faqs)
+          ? product.faqs
+          : typeof product.faqs === 'string'
+            ? JSON.parse(product.faqs)
+            : [],
         tags: product.tags || [],
       };
     }
@@ -265,9 +273,8 @@ export function ProductForm({ product, mode }: ProductFormProps) {
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="media">Media</TabsTrigger>
               <TabsTrigger value="sections">Sections</TabsTrigger>
               <TabsTrigger value="faqs">FAQs</TabsTrigger>
             </TabsList>
@@ -323,6 +330,33 @@ export function ProductForm({ product, mode }: ProductFormProps) {
                 </CardContent>
               </Card>
 
+              {/* Product Media */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Media</CardTitle>
+                  <CardDescription>
+                    Upload product images and videos
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Controller
+                    control={control}
+                    name="images"
+                    render={({ field }) => (
+                      <MediaSection
+                        media={field.value || []}
+                        onChange={(newMedia) => field.onChange(newMedia)}
+                        maxFiles={10}
+                        maxSizeMB={5}
+                      />
+                    )}
+                  />
+                  {errors.images && (
+                    <p className="text-sm text-destructive mt-2">{errors.images.message}</p>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Pricing & Stock */}
               <Card>
                 <CardHeader>
@@ -372,48 +406,6 @@ export function ProductForm({ product, mode }: ProductFormProps) {
                       <p className="text-sm text-destructive">{errors.stock.message}</p>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="media" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Images (Optional)</CardTitle>
-                  <CardDescription>
-                    Upload multiple product images. A placeholder will be used if no images are
-                    provided.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Controller
-                    control={control}
-                    name="images"
-                    render={({ field }) => (
-                      <MediaSection
-                        media={field.value || []}
-                        onChange={(newMedia) => field.onChange(newMedia)}
-                        maxFiles={10}
-                        maxSizeMB={5}
-                      />
-                    )}
-                  />
-                  {errors.images && (
-                    <p className="text-sm text-destructive mt-2">{errors.images.message}</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Video (Optional)</CardTitle>
-                  <CardDescription>Add a product video URL</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Input {...register("video")} placeholder="https://youtube.com/watch?v=..." />
-                  {errors.video && (
-                    <p className="text-sm text-destructive mt-2">{errors.video.message}</p>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>

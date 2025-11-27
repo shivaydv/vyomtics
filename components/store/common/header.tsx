@@ -4,7 +4,6 @@ import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { SearchDialog } from "./search-dialog";
-import { ExpandedSearch } from "./expanded-search";
 import { AdminPanelLink } from "@/components/shared/admin-panel-link";
 import { HeaderCartButton } from "./header-cart-button";
 import { HeaderWishlistButton } from "./header-wishlist-button";
@@ -72,9 +71,6 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <div className="flex-1 max-w-2xl mx-4">
-              <ExpandedSearch />
-            </div>
           </div>
 
           {/* Actions - Right */}
@@ -101,6 +97,7 @@ export function Header() {
 
               {/* Desktop Actions */}
               <div className="hidden lg:flex items-center gap-2">
+                <SearchDialog />
                 <HeaderCartButton />
                 <HeaderWishlistButton />
                 <Button variant="ghost" size="icon" className="" asChild>

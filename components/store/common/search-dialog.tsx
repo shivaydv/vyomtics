@@ -93,13 +93,13 @@ export function SearchDialog() {
           <Search className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
+      <DialogContent className="sm:max-w-[600px] max-w-[95vw] p-0 max-h-[90vh] flex flex-col">
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b flex-shrink-0">
           <DialogTitle>Search</DialogTitle>
         </DialogHeader>
 
         {/* Search Input */}
-        <div className="px-6 pb-4">
+        <div className="px-4 sm:px-6 pb-3 sm:pb-4 flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -117,8 +117,8 @@ export function SearchDialog() {
         </div>
 
         {/* Results */}
-        <ScrollArea className="max-h-[500px]">
-          <div className="px-6 pb-6">
+        <ScrollArea className="flex-1 overflow-auto">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
             {/* Categories Section */}
             {hasResults && results.categories.length > 0 && (
               <div className="mb-6">
@@ -136,16 +136,16 @@ export function SearchDialog() {
                       onClick={() => handleCategoryClick(category.slug)}
                       className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center flex-shrink-0">
                           <Folder className="h-5 w-5 text-white" />
                         </div>
-                        <div className="text-left">
-                          <p className="font-medium text-sm text-gray-900">{category.name}</p>
+                        <div className="text-left min-w-0">
+                          <p className="font-medium text-sm text-gray-900 truncate">{category.name}</p>
                           <p className="text-xs text-gray-500">{category.productCount} products</p>
                         </div>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -169,7 +169,7 @@ export function SearchDialog() {
                       onClick={() => handleProductClick(product.slug)}
                       className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
                     >
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                         {product.images[0] ? (
                           <Image
                             src={product.images[0]}

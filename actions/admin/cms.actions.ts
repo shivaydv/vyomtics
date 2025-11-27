@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 
 // Fixed pages that should exist in the system
 const FIXED_PAGES = [
-  { slug: "about", title: "About Us" },
   { slug: "terms-and-conditions", title: "Terms and Conditions" },
   { slug: "shipping-policy", title: "Shipping Policy" },
   { slug: "privacy-policy", title: "Privacy Policy" },
@@ -216,6 +215,7 @@ export async function addFAQ(data: {
     });
 
     revalidatePath("/admin/faq");
+    revalidatePath("/"); // Revalidate homepage
 
     return { success: true, data: faq };
   } catch (error) {
@@ -246,6 +246,7 @@ export async function updateFAQ(
     });
 
     revalidatePath("/admin/faq");
+    revalidatePath("/"); // Revalidate homepage
 
     return { success: true, data: faq };
   } catch (error) {
@@ -267,6 +268,7 @@ export async function deleteFAQ(id: string) {
     });
 
     revalidatePath("/admin/faq");
+    revalidatePath("/"); // Revalidate homepage
 
     return { success: true };
   } catch (error) {
@@ -293,6 +295,7 @@ export async function reorderFAQs(updates: { id: string; order: number }[]) {
     );
 
     revalidatePath("/admin/faq");
+    revalidatePath("/"); // Revalidate homepage
 
     return { success: true };
   } catch (error) {

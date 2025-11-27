@@ -16,7 +16,6 @@ interface Slide {
     text: string;
     href: string;
   };
-  bgColor: string;
 }
 
 const slides: Slide[] = [
@@ -28,10 +27,9 @@ const slides: Slide[] = [
       "Experience next-level performance. Shop the latest boards, complete kits, and essential accessories.",
     image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=1200",
     cta: {
-      text: "SHOP NOW",
+      text: "Shop Now",
       href: "/categories/development-boards",
     },
-    bgColor: "bg-gradient-to-br from-green-50 to-blue-50",
   },
   {
     id: 2,
@@ -41,10 +39,9 @@ const slides: Slide[] = [
       "Comprehensive robotics kits with everything you need to start learning and building.",
     image: "https://images.unsplash.com/photo-1561557944-6e7860d1a7eb?w=1200",
     cta: {
-      text: "EXPLORE KITS",
+      text: "Explore Kits",
       href: "/categories/robotics-kits",
     },
-    bgColor: "bg-gradient-to-br from-orange-50 to-yellow-50",
   },
   {
     id: 3,
@@ -54,10 +51,9 @@ const slides: Slide[] = [
       "High-speed, high-quality 3D printers and accessories for makers and professionals.",
     image: "https://images.unsplash.com/photo-1562043054-28a2e7d4f5e6?w=1200",
     cta: {
-      text: "VIEW PRINTERS",
+      text: "View Printers",
       href: "/categories/3d-printing",
     },
-    bgColor: "bg-gradient-to-br from-purple-50 to-pink-50",
   },
 ];
 
@@ -89,30 +85,29 @@ export function HeroCarousel() {
   }, [isAutoPlaying, nextSlide]);
 
   return (
-    <div className="relative w-full overflow-hidden bg-white">
-      <div className="relative h-[400px] md:h-[500px] lg:h-[600px]">
+    <div className="relative w-full overflow-hidden bg-gray-50 border-b">
+      <div className="relative h-[450px] md:h-[550px] lg:h-[650px]">
         {slides.map((slide, index) => (
           <div
             key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-700 ${
-              index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-            }`}
+            className={`absolute inset-0 transition-opacity duration-700 ${index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
           >
-            <div className={`h-full ${slide.bgColor}`}>
-              <div className="container mx-auto px-4 h-full">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center h-full py-8">
+            <div className="h-full">
+              <div className="container mx-auto px-6 h-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center h-full py-12">
                   {/* Content */}
-                  <div className="space-y-6 text-center lg:text-left">
-                    <div className="space-y-2">
-                      <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                  <div className="space-y-8 text-center lg:text-left">
+                    <div className="space-y-3">
+                      <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-gray-900 leading-tight">
                         {slide.title}
                       </h2>
-                      <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-600">
+                      <h3 className="text-2xl md:text-3xl lg:text-4xl font-medium text-gray-600">
                         {slide.subtitle}
                       </h3>
                     </div>
 
-                    <p className="text-lg md:text-xl text-gray-600 max-w-xl mx-auto lg:mx-0">
+                    <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                       {slide.description}
                     </p>
 
@@ -120,7 +115,7 @@ export function HeroCarousel() {
                       <Button
                         asChild
                         size="lg"
-                        className="bg-black hover:bg-gray-800 text-white px-8 py-6 text-lg font-semibold"
+                        className="bg-gray-900 hover:bg-gray-800 text-white px-8 h-12 text-base font-medium"
                       >
                         <Link href={slide.cta.href}>{slide.cta.text}</Link>
                       </Button>
@@ -147,29 +142,28 @@ export function HeroCarousel() {
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white hover:bg-gray-50 p-2.5 rounded-full border border-gray-200 transition-all"
           aria-label="Previous slide"
         >
-          <ChevronLeft className="h-6 w-6 text-gray-900" />
+          <ChevronLeft className="h-5 w-5 text-gray-900" />
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white hover:bg-gray-50 p-2.5 rounded-full border border-gray-200 transition-all"
           aria-label="Next slide"
         >
-          <ChevronRight className="h-6 w-6 text-gray-900" />
+          <ChevronRight className="h-5 w-5 text-gray-900" />
         </button>
 
         {/* Dots Indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all ${
-                index === currentSlide ? "w-8 bg-blue-600" : "w-2 bg-gray-400 hover:bg-gray-600"
-              }`}
+              className={`h-1.5 rounded-full transition-all ${index === currentSlide ? "w-8 bg-gray-900" : "w-1.5 bg-gray-400 hover:bg-gray-600"
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}

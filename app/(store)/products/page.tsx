@@ -1,6 +1,6 @@
 import { generatePageMetadata } from "@/lib/metadata";
 import { prisma } from "@/prisma/db";
-import { ProductCard } from "@/components/store/products/product-card";
+import { ModernProductCard } from "@/components/store/products/modern-product-card";
 import { ProductFilters } from "@/components/store/products/product-filters";
 import { ProductSort } from "@/components/store/products/product-sort";
 
@@ -101,69 +101,69 @@ export default async function ProductsPage({
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200">
-        <div className="container mx-auto px-4 py-12">
-          <nav className="text-sm text-gray-600 mb-4">
-            <a href="/" className="hover:text-blue-600">
-              Home
-            </a>
-            <span className="mx-2">/</span>
-            <span className="text-gray-900">Products</span>
-          </nav>
+      <div className="bg-gray-50 border-b border-gray-100">
+        <div className="container mx-auto px-4 py-16 max-w-7xl">
+          <div className="max-w-3xl">
+            <nav className="text-sm text-gray-500 font-medium mb-6">
+              <a href="/" className="hover:text-gray-900 transition-colors">
+                Home
+              </a>
+              <span className="mx-3 text-gray-300">/</span>
+              <span className="text-gray-900">Products</span>
+            </nav>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">All Products</h1>
-          <p className="text-lg text-gray-600">
-            Showing {products.length} of {totalCount} products
-          </p>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 tracking-tight mb-6">All Products</h1>
+            <p className="text-xl text-gray-600 leading-relaxed">
+              Browse our complete collection of electronics, robotics, and DIY components.
+              Find everything you need for your next project.
+            </p>
+
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mt-6">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              {totalCount} products available
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
+        <div className="flex flex-col lg:flex-row gap-12">
           {/* Filters Sidebar */}
-          <aside className="lg:w-64 flex-shrink-0">
-            <ProductFilters categories={categories} />
+          <aside className="lg:w-72 flex-shrink-0">
+            <div className="sticky top-24">
+              <ProductFilters categories={categories} />
+            </div>
           </aside>
 
           {/* Products Grid */}
           <div className="flex-1">
             {/* Sort and View Options */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-100 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold text-gray-900">Product Catalog</h2>
               <ProductSort />
-              <div className="text-sm text-gray-600 font-medium">{totalCount} Products</div>
             </div>
 
             {/* Products */}
             {products.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ModernProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-gray-50 rounded-lg">
-                <div className="text-gray-400 mb-4">
-                  <svg
-                    className="w-24 h-24 mx-auto"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                    />
-                  </svg>
+              <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                  <span className="text-4xl">🔍</span>
                 </div>
-                <p className="text-gray-600 text-xl font-semibold mb-2">No products found</p>
-                <p className="text-gray-500 mb-6">Try adjusting your filters or search terms</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No products found</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-8">
+                  We couldn't find any products matching your filters. Try adjusting your search or filter criteria.
+                </p>
                 <a
                   href="/products"
-                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
                 >
-                  Clear Filters
+                  Clear All Filters
                 </a>
               </div>
             )}

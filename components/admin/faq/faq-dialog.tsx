@@ -70,12 +70,14 @@ export function FAQDialog({ open, onOpenChange, faq, onSuccess }: FAQDialogProps
 
     const result = isEditing ? await updateFAQ(faq.id, data) : await addFAQ(data);
 
+    setIsSaving(false);
+
     if (result.success) {
       toast.success(isEditing ? "FAQ updated successfully" : "FAQ added successfully");
+      onOpenChange(false); // Close dialog
       onSuccess();
     } else {
       toast.error(result.error || "Failed to save FAQ");
-      setIsSaving(false);
     }
   };
 

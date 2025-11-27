@@ -41,10 +41,13 @@ export async function FeaturedProducts({ title, filter }: FeaturedProductsProps)
 
   return (
     <section className="py-12 md:py-16 bg-white">
-      <div className="container mx-auto px-4 w-full">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{title}</h2>
-          <p className="text-gray-600">Discover our most popular products</p>
+      <div className="container mx-auto px-6">
+        <div className="mb-12">
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+            {filter === "bestseller" ? "Best Sellers" : filter === "new" ? "New Arrivals" : "Featured"}
+          </p>
+          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">{title}</h2>
+          <p className="text-base md:text-lg text-gray-600">Discover our most popular products</p>
         </div>
 
         <ProductCarousel products={products} />

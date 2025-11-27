@@ -71,7 +71,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-600 mb-6">
           <a href="/" className="hover:text-blue-600">
@@ -94,7 +94,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <ProductImageGallery images={product.images} title={product.title} />
           <ProductInfo
             product={{
-              ...product,
+              id: product.id,
+              title: product.title,
+              shortDescription: product.shortDescription,
+              mrp: product.mrp,
+              sellingPrice: product.sellingPrice,
+              stock: product.stock,
+              tags: product.tags,
+              isFeatured: product.isFeatured,
+              isBestSeller: product.isBestSeller,
+              isNewArrival: product.isNewArrival,
+              isOnSale: product.isOnSale,
               avgRating,
               reviewCount: product.reviews.length,
             }}
@@ -105,7 +115,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <ProductTabs description={product.description} sections={sections} faqs={faqs} />
 
         {/* Reviews Section */}
-        <ProductReviews productId={product.id} reviews={product.reviews} avgRating={avgRating} />
+        <ProductReviews
+          productId={product.id}
+          reviews={product.reviews.map(r => ({
+            ...r,
+            comment: r.comment || ""
+          }))}
+          avgRating={avgRating}
+        />
 
         {/* Related Products */}
         {product.categoryId && (
