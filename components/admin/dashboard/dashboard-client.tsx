@@ -50,11 +50,14 @@ const RecentOrdersList = dynamic(
   { loading: () => <Skeleton className="h-[400px] w-full" /> }
 );
 
+import { useRouter } from "next/navigation";
+
 interface DashboardClientProps {
   initialStats: any;
   initialRevenue: any[];
   initialCategories: any[];
   initialTopProducts: any[];
+  initialFilter: any;
 }
 
 export function DashboardClient({
@@ -62,8 +65,10 @@ export function DashboardClient({
   initialRevenue,
   initialCategories,
   initialTopProducts,
+  initialFilter = "lifetime",
 }: DashboardClientProps) {
-  const [timeFilter, setTimeFilter] = useState<TimeFilterType>("today");
+  const router = useRouter();
+  const [timeFilter, setTimeFilter] = useState<TimeFilterType>(initialFilter);
   const [isLoading, setIsLoading] = useState(false);
 
   // For now, use initial data - full implementation would refetch on filter change
@@ -72,16 +77,10 @@ export function DashboardClient({
   const categoryData = initialCategories;
   const topProducts = initialTopProducts;
 
-  // Create modified stats for "today" view - show today's data as main values
-  const displayStats =
-    timeFilter === "today" && stats
-      ? {
-          ...stats,
-          totalRevenue: stats.todayRevenue,
-          totalOrders: stats.todayOrders,
-          // Keep growth percentages as they are
-        }
-      : stats;
+  const handleFilterChange = (value: TimeFilterType) => {
+    setTimeFilter(value);
+    router.push(`/admin?filter=${value}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -91,11 +90,11 @@ export function DashboardClient({
           <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
           <p className="text-muted-foreground mt-1">Your store performance at a glance</p>
         </div>
-        <TimeFilter value={timeFilter} onValueChange={setTimeFilter} />
+        <TimeFilter value={timeFilter} onValueChange={handleFilterChange} />
       </div>
 
       {/* Stats - Minimal Cards with Today's Data */}
-      {displayStats && <DashboardStats stats={displayStats} timeFilter={timeFilter} />}
+      {stats && <DashboardStats stats={stats} timeFilter={timeFilter} />}
 
       {/* Main Revenue & Orders Area Chart - Rectangular & Colorful */}
       <RevenueAreaChart data={revenueData} />

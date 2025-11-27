@@ -46,11 +46,11 @@ export async function getDashboardStats(
       todayRevenue,
       todayOrders,
     ] = await Promise.all([
-      // Total revenue - only count successfully paid orders (time-filtered)
+      // Total revenue - count all non-cancelled/non-failed orders (time-filtered)
       prisma.order.aggregate({
         where: {
           createdAt: { gte: startDate },
-          paymentStatus: "SUCCESS",
+          status: { notIn: ["CANCELLED", "FAILED"] },
         },
         _sum: { total: true },
       }),
@@ -62,19 +62,19 @@ export async function getDashboardStats(
       }),
       // Total products
       prisma.product.count(),
-      // Previous period revenue - only successfully paid (for comparison)
+      // Previous period revenue - non-cancelled/non-failed (for comparison)
       prisma.order.aggregate({
         where: {
           createdAt: { gte: previousStartDate, lte: previousEndDate },
-          paymentStatus: "SUCCESS",
+          status: { notIn: ["CANCELLED", "FAILED"] },
         },
         _sum: { total: true },
       }),
-      // Today's stats - only successfully paid
+      // Today's stats - non-cancelled/non-failed
       prisma.order.aggregate({
         where: {
           createdAt: { gte: startOfToday },
-          paymentStatus: "SUCCESS",
+          status: { notIn: ["CANCELLED", "FAILED"] },
         },
         _sum: { total: true },
       }),
@@ -128,7 +128,7 @@ export async function getRevenueData() {
         prisma.order.aggregate({
           where: {
             createdAt: { gte: date, lt: nextDate },
-            status: { notIn: ["CANCELLED"] },
+            status: { notIn: ["CANCELLED", "FAILED"] },
           },
           _sum: { total: true },
         }),
